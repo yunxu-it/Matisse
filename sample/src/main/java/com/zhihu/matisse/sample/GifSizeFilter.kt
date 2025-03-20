@@ -13,50 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.sample;
+package com.zhihu.matisse.sample
 
-import android.content.Context;
-import android.graphics.Point;
+import android.content.Context
+import com.zhihu.matisse.MimeType
+import com.zhihu.matisse.filter.Filter
+import com.zhihu.matisse.internal.entity.IncapableCause
+import com.zhihu.matisse.internal.entity.Item
+import com.zhihu.matisse.internal.utils.PhotoMetadataUtils
 
-import com.zhihu.matisse.MimeType;
-import com.zhihu.matisse.filter.Filter;
-import com.zhihu.matisse.internal.entity.IncapableCause;
-import com.zhihu.matisse.internal.entity.Item;
-import com.zhihu.matisse.internal.utils.PhotoMetadataUtils;
-
-import java.util.HashSet;
-import java.util.Set;
-
-class GifSizeFilter extends Filter {
-
-    private int mMinWidth;
-    private int mMinHeight;
-    private int mMaxSize;
-
-    GifSizeFilter(int minWidth, int minHeight, int maxSizeInBytes) {
-        mMinWidth = minWidth;
-        mMinHeight = minHeight;
-        mMaxSize = maxSizeInBytes;
+internal class GifSizeFilter(private val mMinWidth: Int, private val mMinHeight: Int, private val mMaxSize: Int) : Filter() {
+  public override fun constraintTypes(): Set<MimeType> {
+    return object : HashSet<MimeType>() {
+      init {
+        add(MimeType.GIF)
+      }
     }
+  }
 
-    @Override
-    public Set<MimeType> constraintTypes() {
-        return new HashSet<MimeType>() {{
-            add(MimeType.GIF);
-        }};
+  override fun filter(context: Context, item: Item): IncapableCause? {
+    if (!needFiltering(context, item)) return null
+
+    val size = PhotoMetadataUtils.getBitmapBound(context.contentResolver, item.contentUri)
+    if (size.x < mMinWidth || size.y < mMinHeight || item.size > mMaxSize) {
+      return IncapableCause(
+        IncapableCause.DIALOG, context.getString(
+          R.string.error_gif, mMinWidth,
+          PhotoMetadataUtils.getSizeInMB(mMaxSize.toLong()).toString()
+        )
+      )
     }
-
-    @Override
-    public IncapableCause filter(Context context, Item item) {
-        if (!needFiltering(context, item))
-            return null;
-
-        Point size = PhotoMetadataUtils.getBitmapBound(context.getContentResolver(), item.getContentUri());
-        if (size.x < mMinWidth || size.y < mMinHeight || item.size > mMaxSize) {
-            return new IncapableCause(IncapableCause.DIALOG, context.getString(R.string.error_gif, mMinWidth,
-                    String.valueOf(PhotoMetadataUtils.getSizeInMB(mMaxSize))));
-        }
-        return null;
-    }
-
+    return null
+  }
 }
