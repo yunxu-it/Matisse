@@ -14,94 +14,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.model;
+package com.zhihu.matisse.internal.model
 
-import android.content.Context;
-import android.database.Cursor;
-import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentActivity;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
+import android.content.Context
+import android.database.Cursor
+import android.os.Bundle
+import androidx.fragment.app.FragmentActivity
+import androidx.loader.app.LoaderManager
+import androidx.loader.app.LoaderManager.LoaderCallbacks
+import androidx.loader.content.Loader
+import com.zhihu.matisse.internal.entity.Album
+import com.zhihu.matisse.internal.loader.AlbumMediaLoader
+import java.lang.ref.WeakReference
 
-import com.zhihu.matisse.internal.entity.Album;
-import com.zhihu.matisse.internal.loader.AlbumMediaLoader;
+class AlbumMediaCollection : LoaderCallbacks<Cursor> {
+  private var mContext: WeakReference<Context>? = null
+  private var mLoaderManager: LoaderManager? = null
+  private var mCallbacks: AlbumMediaCallbacks? = null
 
-import java.lang.ref.WeakReference;
+  override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
+    val context = mContext?.get() ?: throw RuntimeException("context is null")
+    val album = args?.getParcelable<Album>(ARGS_ALBUM) ?: throw RuntimeException("album is null")
+    return AlbumMediaLoader.newInstance(context, album, album.isAll && args.getBoolean(ARGS_ENABLE_CAPTURE, false))
+  }
 
-public class AlbumMediaCollection implements LoaderManager.LoaderCallbacks<Cursor> {
-    private static final int LOADER_ID = 2;
-    private static final String ARGS_ALBUM = "args_album";
-    private static final String ARGS_ENABLE_CAPTURE = "args_enable_capture";
-    private WeakReference<Context> mContext;
-    private LoaderManager mLoaderManager;
-    private AlbumMediaCallbacks mCallbacks;
+  override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
+    mCallbacks?.onAlbumMediaLoad(data)
+  }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Context context = mContext.get();
-        if (context == null) {
-            return null;
-        }
+  override fun onLoaderReset(loader: Loader<Cursor>) {
+    mCallbacks?.onAlbumMediaReset()
+  }
 
-        Album album = args.getParcelable(ARGS_ALBUM);
-        if (album == null) {
-            return null;
-        }
+  fun onCreate(context: FragmentActivity, callbacks: AlbumMediaCallbacks) {
+    mContext = WeakReference(context)
+    mLoaderManager = LoaderManager.getInstance(context)
+    mCallbacks = callbacks
+  }
 
-        return AlbumMediaLoader.newInstance(context, album,
-                album.isAll() && args.getBoolean(ARGS_ENABLE_CAPTURE, false));
-    }
+  fun onDestroy() {
+    mLoaderManager?.destroyLoader(LOADER_ID)
+    mCallbacks = null
+  }
 
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        Context context = mContext.get();
-        if (context == null) {
-            return;
-        }
+  @JvmOverloads
+  fun load(target: Album?, enableCapture: Boolean = false) {
+    val args = Bundle()
+    args.putParcelable(ARGS_ALBUM, target)
+    args.putBoolean(ARGS_ENABLE_CAPTURE, enableCapture)
+    mLoaderManager?.initLoader(LOADER_ID, args, this)
+  }
 
-        mCallbacks.onAlbumMediaLoad(data);
-    }
+  interface AlbumMediaCallbacks {
+    fun onAlbumMediaLoad(cursor: Cursor?)
 
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        Context context = mContext.get();
-        if (context == null) {
-            return;
-        }
+    fun onAlbumMediaReset()
+  }
 
-        mCallbacks.onAlbumMediaReset();
-    }
-
-    public void onCreate(@NonNull FragmentActivity context, @NonNull AlbumMediaCallbacks callbacks) {
-        mContext = new WeakReference<Context>(context);
-        mLoaderManager = context.getSupportLoaderManager();
-        mCallbacks = callbacks;
-    }
-
-    public void onDestroy() {
-        if (mLoaderManager != null) {
-            mLoaderManager.destroyLoader(LOADER_ID);
-        }
-        mCallbacks = null;
-    }
-
-    public void load(@Nullable Album target) {
-        load(target, false);
-    }
-
-    public void load(@Nullable Album target, boolean enableCapture) {
-        Bundle args = new Bundle();
-        args.putParcelable(ARGS_ALBUM, target);
-        args.putBoolean(ARGS_ENABLE_CAPTURE, enableCapture);
-        mLoaderManager.initLoader(LOADER_ID, args, this);
-    }
-
-    public interface AlbumMediaCallbacks {
-
-        void onAlbumMediaLoad(Cursor cursor);
-
-        void onAlbumMediaReset();
-    }
+  companion object {
+    private const val LOADER_ID = 2
+    private const val ARGS_ALBUM = "args_album"
+    private const val ARGS_ENABLE_CAPTURE = "args_enable_capture"
+  }
 }

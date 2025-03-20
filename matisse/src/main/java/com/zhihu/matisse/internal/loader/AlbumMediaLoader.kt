@@ -14,184 +14,151 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.loader;
+package com.zhihu.matisse.internal.loader
 
-import android.content.Context;
-import android.database.Cursor;
-import android.database.MatrixCursor;
-import android.database.MergeCursor;
-import android.net.Uri;
-import android.provider.MediaStore;
-
-import androidx.loader.content.CursorLoader;
-
-import com.zhihu.matisse.internal.entity.Album;
-import com.zhihu.matisse.internal.entity.Item;
-import com.zhihu.matisse.internal.entity.SelectionSpec;
-import com.zhihu.matisse.internal.utils.MediaStoreCompat;
+import android.content.Context
+import android.database.Cursor
+import android.database.MatrixCursor
+import android.database.MergeCursor
+import android.net.Uri
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
+import android.provider.MediaStore
+import android.provider.MediaStore.Files.FileColumns
+import android.provider.MediaStore.Images.Media
+import android.provider.MediaStore.MediaColumns
+import android.provider.MediaStore.VOLUME_EXTERNAL
+import androidx.loader.content.CursorLoader
+import com.zhihu.matisse.internal.entity.Album
+import com.zhihu.matisse.internal.entity.Item
+import com.zhihu.matisse.internal.entity.SelectionSpec
+import com.zhihu.matisse.internal.utils.MediaStoreCompat
 
 /**
  * Load images and videos into a single cursor.
  */
-public class AlbumMediaLoader extends CursorLoader {
-    private static final Uri QUERY_URI = MediaStore.Files.getContentUri("external");
-    private static final String[] PROJECTION = {
-            MediaStore.Files.FileColumns._ID,
-            MediaStore.MediaColumns.DISPLAY_NAME,
-            MediaStore.MediaColumns.MIME_TYPE,
-            MediaStore.MediaColumns.SIZE,
-            "duration"};
+class AlbumMediaLoader private constructor(context: Context, selection: String, selectionArgs: Array<String>, private val mEnableCapture: Boolean) :
+  CursorLoader(context, QUERY_URI, PROJECTION, selection, selectionArgs, ORDER_BY) {
+
+  override fun loadInBackground(): Cursor? {
+    val result = super.loadInBackground()
+    if (!mEnableCapture || !MediaStoreCompat.hasCameraFeature(context)) {
+      return result
+    }
+    val dummy = MatrixCursor(PROJECTION)
+    dummy.addRow(arrayOf<Any>(Item.ITEM_ID_CAPTURE, Item.ITEM_DISPLAY_NAME_CAPTURE, "", 0, 0))
+    return MergeCursor(arrayOf(dummy, result))
+  }
+
+  override fun onContentChanged() { // FIXME a dirty way to fix loading multiple times
+  }
+
+  companion object {
+    private val QUERY_URI: Uri = if (VERSION.SDK_INT >= VERSION_CODES.Q) {
+      MediaStore.Files.getContentUri(VOLUME_EXTERNAL)
+    } else {
+      MediaStore.Files.getContentUri("external")
+    };
+
+    private val PROJECTION = arrayOf(FileColumns._ID, MediaColumns.DISPLAY_NAME, MediaColumns.MIME_TYPE, MediaColumns.SIZE, MediaColumns.DURATION)
 
     // === params for album ALL && showSingleMediaType: false ===
-    private static final String SELECTION_ALL =
-            "(" + MediaStore.Files.FileColumns.MEDIA_TYPE + "=?"
-                    + " OR "
-                    + MediaStore.Files.FileColumns.MEDIA_TYPE + "=?)"
-                    + " AND " + MediaStore.MediaColumns.SIZE + ">0";
-    private static final String[] SELECTION_ALL_ARGS = {
-            String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE),
-            String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO),
-    };
+    private const val SELECTION_ALL = "(${FileColumns.MEDIA_TYPE}=? OR ${FileColumns.MEDIA_TYPE}=?) AND ${MediaColumns.SIZE}>0"
+
+    private val SELECTION_ALL_ARGS = arrayOf(FileColumns.MEDIA_TYPE_IMAGE.toString(), FileColumns.MEDIA_TYPE_VIDEO.toString())
+
     // ===========================================================
-
     // === params for album ALL && showSingleMediaType: true ===
-    private static final String SELECTION_ALL_FOR_SINGLE_MEDIA_TYPE =
-            MediaStore.Files.FileColumns.MEDIA_TYPE + "=?"
-                    + " AND " + MediaStore.MediaColumns.SIZE + ">0";
+    private const val SELECTION_ALL_FOR_SINGLE_MEDIA_TYPE = "${FileColumns.MEDIA_TYPE}=? AND ${MediaColumns.SIZE}>0"
 
-    private static String[] getSelectionArgsForSingleMediaType(int mediaType) {
-        return new String[]{String.valueOf(mediaType)};
+    private fun getSelectionArgsForSingleMediaType(mediaType: Int): Array<String> {
+      return arrayOf(mediaType.toString())
     }
+
     // =========================================================
-
     // === params for ordinary album && showSingleMediaType: false ===
-    private static final String SELECTION_ALBUM =
-            "(" + MediaStore.Files.FileColumns.MEDIA_TYPE + "=?"
-                    + " OR "
-                    + MediaStore.Files.FileColumns.MEDIA_TYPE + "=?)"
-                    + " AND "
-                    + " bucket_id=?"
-                    + " AND " + MediaStore.MediaColumns.SIZE + ">0";
+    private const val SELECTION_ALBUM = "(${FileColumns.MEDIA_TYPE}=? OR ${FileColumns.MEDIA_TYPE}=?) AND bucket_id=? AND ${MediaColumns.SIZE}>0"
 
-    private static String[] getSelectionAlbumArgs(String albumId) {
-        return new String[]{
-                String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE),
-                String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO),
-                albumId
-        };
+    private fun getSelectionAlbumArgs(albumId: String): Array<String> {
+      return arrayOf(FileColumns.MEDIA_TYPE_IMAGE.toString(), FileColumns.MEDIA_TYPE_VIDEO.toString(), albumId)
     }
-    // ===============================================================
 
+    // ===============================================================
     // === params for ordinary album && showSingleMediaType: true ===
-    private static final String SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE =
-            MediaStore.Files.FileColumns.MEDIA_TYPE + "=?"
-                    + " AND "
-                    + " bucket_id=?"
-                    + " AND " + MediaStore.MediaColumns.SIZE + ">0";
+    private const val SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE = "${FileColumns.MEDIA_TYPE}=? AND bucket_id=? AND ${MediaColumns.SIZE}>0"
 
-    private static String[] getSelectionAlbumArgsForSingleMediaType(int mediaType, String albumId) {
-        return new String[]{String.valueOf(mediaType), albumId};
+    private fun getSelectionAlbumArgsForSingleMediaType(mediaType: Int, albumId: String): Array<String> {
+      return arrayOf(mediaType.toString(), albumId)
     }
-    // ===============================================================
 
+    // ===============================================================
     // === params for album ALL && showSingleMediaType: true && MineType=="image/gif"
-    private static final String SELECTION_ALL_FOR_GIF =
-            MediaStore.Files.FileColumns.MEDIA_TYPE + "=?"
-                    + " AND "
-                    + MediaStore.MediaColumns.MIME_TYPE + "=?"
-                    + " AND " + MediaStore.MediaColumns.SIZE + ">0";
+    private const val SELECTION_ALL_FOR_GIF = "${FileColumns.MEDIA_TYPE}=? AND ${MediaColumns.MIME_TYPE}=? AND ${MediaColumns.SIZE}>0"
 
-    private static String[] getSelectionArgsForGifType(int mediaType) {
-        return new String[]{String.valueOf(mediaType), "image/gif"};
+    private fun getSelectionArgsForGifType(mediaType: Int): Array<String> {
+      return arrayOf(mediaType.toString(), "image/gif")
     }
-    // ===============================================================
 
+    // ===============================================================
     // === params for ordinary album && showSingleMediaType: true  && MineType=="image/gif" ===
-    private static final String SELECTION_ALBUM_FOR_GIF =
-            MediaStore.Files.FileColumns.MEDIA_TYPE + "=?"
-                    + " AND "
-                    + " bucket_id=?"
-                    + " AND "
-                    + MediaStore.MediaColumns.MIME_TYPE + "=?"
-                    + " AND " + MediaStore.MediaColumns.SIZE + ">0";
+    private const val SELECTION_ALBUM_FOR_GIF = "${FileColumns.MEDIA_TYPE}=? AND bucket_id=? AND ${MediaColumns.MIME_TYPE}=? AND ${MediaColumns.SIZE}>0"
 
-    private static String[] getSelectionAlbumArgsForGifType(int mediaType, String albumId) {
-        return new String[]{String.valueOf(mediaType), albumId, "image/gif"};
+    private fun getSelectionAlbumArgsForGifType(mediaType: Int, albumId: String): Array<String> {
+      return arrayOf(mediaType.toString(), albumId, "image/gif")
     }
+
     // ===============================================================
+    private const val ORDER_BY = Media.DATE_TAKEN + " DESC"
 
-    private static final String ORDER_BY = MediaStore.Images.Media.DATE_TAKEN + " DESC";
-    private final boolean mEnableCapture;
+    fun newInstance(context: Context, album: Album, capture: Boolean): CursorLoader {
+      val selection: String
+      val selectionArgs: Array<String>
+      val enableCapture: Boolean
 
-    private AlbumMediaLoader(Context context, String selection, String[] selectionArgs, boolean capture) {
-        super(context, QUERY_URI, PROJECTION, selection, selectionArgs, ORDER_BY);
-        mEnableCapture = capture;
-    }
-
-    public static CursorLoader newInstance(Context context, Album album, boolean capture) {
-        String selection;
-        String[] selectionArgs;
-        boolean enableCapture;
-
-        if (album.isAll()) {
-            if (SelectionSpec.getInstance().onlyShowGif()) {
-                selection = SELECTION_ALL_FOR_GIF;
-                selectionArgs = getSelectionArgsForGifType(
-                        MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
-            } else if (SelectionSpec.getInstance().onlyShowImages()) {
-                selection = SELECTION_ALL_FOR_SINGLE_MEDIA_TYPE;
-                selectionArgs =
-                        getSelectionArgsForSingleMediaType(
-                                MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
-            } else if (SelectionSpec.getInstance().onlyShowVideos()) {
-                selection = SELECTION_ALL_FOR_SINGLE_MEDIA_TYPE;
-                selectionArgs =
-                        getSelectionArgsForSingleMediaType(
-                                MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
-            } else {
-                selection = SELECTION_ALL;
-                selectionArgs = SELECTION_ALL_ARGS;
-            }
-            enableCapture = capture;
+      if (album.isAll) {
+        if (SelectionSpec.getInstance().onlyShowGif()) {
+          selection = SELECTION_ALL_FOR_GIF
+          selectionArgs = getSelectionArgsForGifType(
+            FileColumns.MEDIA_TYPE_IMAGE
+          )
+        } else if (SelectionSpec.getInstance().onlyShowImages()) {
+          selection = SELECTION_ALL_FOR_SINGLE_MEDIA_TYPE
+          selectionArgs = getSelectionArgsForSingleMediaType(
+            FileColumns.MEDIA_TYPE_IMAGE
+          )
+        } else if (SelectionSpec.getInstance().onlyShowVideos()) {
+          selection = SELECTION_ALL_FOR_SINGLE_MEDIA_TYPE
+          selectionArgs = getSelectionArgsForSingleMediaType(
+            FileColumns.MEDIA_TYPE_VIDEO
+          )
         } else {
-            if (SelectionSpec.getInstance().onlyShowGif()) {
-                selection = SELECTION_ALBUM_FOR_GIF;
-                selectionArgs =
-                        getSelectionAlbumArgsForGifType(
-                                MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE, album.getId());
-            } else if (SelectionSpec.getInstance().onlyShowImages()) {
-                selection = SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE;
-                selectionArgs =
-                        getSelectionAlbumArgsForSingleMediaType(
-                                MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE,
-                                album.getId());
-            } else if (SelectionSpec.getInstance().onlyShowVideos()) {
-                selection = SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE;
-                selectionArgs = getSelectionAlbumArgsForSingleMediaType(
-                        MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO,
-                        album.getId());
-            } else {
-                selection = SELECTION_ALBUM;
-                selectionArgs = getSelectionAlbumArgs(album.getId());
-            }
-            enableCapture = false;
+          selection = SELECTION_ALL
+          selectionArgs = SELECTION_ALL_ARGS
         }
-        return new AlbumMediaLoader(context, selection, selectionArgs, enableCapture);
-    }
-
-    @Override
-    public Cursor loadInBackground() {
-        Cursor result = super.loadInBackground();
-        if (!mEnableCapture || !MediaStoreCompat.hasCameraFeature(getContext())) {
-            return result;
+        enableCapture = capture
+      } else {
+        if (SelectionSpec.getInstance().onlyShowGif()) {
+          selection = SELECTION_ALBUM_FOR_GIF
+          selectionArgs = getSelectionAlbumArgsForGifType(
+            FileColumns.MEDIA_TYPE_IMAGE, album.id
+          )
+        } else if (SelectionSpec.getInstance().onlyShowImages()) {
+          selection = SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE
+          selectionArgs = getSelectionAlbumArgsForSingleMediaType(
+            FileColumns.MEDIA_TYPE_IMAGE, album.id
+          )
+        } else if (SelectionSpec.getInstance().onlyShowVideos()) {
+          selection = SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE
+          selectionArgs = getSelectionAlbumArgsForSingleMediaType(
+            FileColumns.MEDIA_TYPE_VIDEO, album.id
+          )
+        } else {
+          selection = SELECTION_ALBUM
+          selectionArgs = getSelectionAlbumArgs(album.id)
         }
-        MatrixCursor dummy = new MatrixCursor(PROJECTION);
-        dummy.addRow(new Object[]{Item.ITEM_ID_CAPTURE, Item.ITEM_DISPLAY_NAME_CAPTURE, "", 0, 0});
-        return new MergeCursor(new Cursor[]{dummy, result});
+        enableCapture = false
+      }
+      return AlbumMediaLoader(context, selection, selectionArgs, enableCapture)
     }
-
-    @Override
-    public void onContentChanged() {
-        // FIXME a dirty way to fix loading multiple times
-    }
+  }
 }

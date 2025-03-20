@@ -14,96 +14,86 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.model;
+package com.zhihu.matisse.internal.model
 
-import android.content.Context;
-import android.database.Cursor;
-import android.os.Bundle;
-import androidx.fragment.app.FragmentActivity;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
-import com.zhihu.matisse.internal.loader.AlbumLoader;
-import java.lang.ref.WeakReference;
+import android.content.Context
+import android.database.Cursor
+import android.os.Bundle
+import androidx.fragment.app.FragmentActivity
+import androidx.loader.app.LoaderManager
+import androidx.loader.app.LoaderManager.LoaderCallbacks
+import androidx.loader.content.Loader
+import com.zhihu.matisse.internal.loader.AlbumLoader
+import java.lang.ref.WeakReference
 
-public class AlbumCollection implements LoaderManager.LoaderCallbacks<Cursor> {
-  private static final int LOADER_ID = 1;
-  private static final String STATE_CURRENT_SELECTION = "state_current_selection";
-  private WeakReference<Context> mContext;
-  private LoaderManager mLoaderManager;
-  private AlbumCallbacks mCallbacks;
-  private int mCurrentSelection;
-  private boolean mLoadFinished;
+class AlbumCollection : LoaderCallbacks<Cursor> {
+  private var mContext: WeakReference<Context>? = null
+  private var mLoaderManager: LoaderManager? = null
+  private var mCallbacks: AlbumCallbacks? = null
+  var currentSelection: Int = 0
+    private set
+  private var mLoadFinished = false
 
-  @Override public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    Context context = mContext.get();
-    if (context == null) {
-      return null;
-    }
-    mLoadFinished = false;
-    return AlbumLoader.newInstance(context);
+  override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
+    val context = mContext?.get() ?: throw RuntimeException("context is null")
+
+    mLoadFinished = false
+    return AlbumLoader.newInstance(context)
   }
 
-  @Override public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-    Context context = mContext.get();
-    if (context == null) {
-      return;
-    }
-
+  override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
     if (!mLoadFinished) {
-      mLoadFinished = true;
-      mCallbacks.onAlbumLoad(data);
+      mCallbacks?.let {
+        it.onAlbumLoad(data)
+        mLoadFinished = true
+      }
+
     }
   }
 
-  @Override public void onLoaderReset(Loader<Cursor> loader) {
-    Context context = mContext.get();
-    if (context == null) {
-      return;
-    }
-
-    mCallbacks.onAlbumReset();
+  override fun onLoaderReset(loader: Loader<Cursor>) {
+    mCallbacks?.onAlbumReset()
   }
 
-  public void onCreate(FragmentActivity activity, AlbumCallbacks callbacks) {
-    mContext = new WeakReference<Context>(activity);
-    mLoaderManager = activity.getSupportLoaderManager();
-    mCallbacks = callbacks;
+  fun onCreate(activity: FragmentActivity, callbacks: AlbumCallbacks?) {
+    mContext = WeakReference(activity)
+    mLoaderManager = LoaderManager.getInstance(activity)
+    mCallbacks = callbacks
   }
 
-  public void onRestoreInstanceState(Bundle savedInstanceState) {
+  fun onRestoreInstanceState(savedInstanceState: Bundle?) {
     if (savedInstanceState == null) {
-      return;
+      return
     }
 
-    mCurrentSelection = savedInstanceState.getInt(STATE_CURRENT_SELECTION);
+    currentSelection = savedInstanceState.getInt(STATE_CURRENT_SELECTION)
   }
 
-  public void onSaveInstanceState(Bundle outState) {
-    outState.putInt(STATE_CURRENT_SELECTION, mCurrentSelection);
+  fun onSaveInstanceState(outState: Bundle) {
+    outState.putInt(STATE_CURRENT_SELECTION, currentSelection)
   }
 
-  public void onDestroy() {
-    if (mLoaderManager != null) {
-      mLoaderManager.destroyLoader(LOADER_ID);
-    }
-    mCallbacks = null;
+  fun onDestroy() {
+    mLoaderManager?.destroyLoader(LOADER_ID)
+    mCallbacks = null
   }
 
-  public void loadAlbums() {
-    mLoaderManager.initLoader(LOADER_ID, null, this);
+  fun loadAlbums() {
+    mLoaderManager?.initLoader(LOADER_ID, null, this)
   }
 
-  public int getCurrentSelection() {
-    return mCurrentSelection;
+  fun setStateCurrentSelection(currentSelection: Int) {
+    this.currentSelection = currentSelection
   }
 
-  public void setStateCurrentSelection(int currentSelection) {
-    mCurrentSelection = currentSelection;
+  interface AlbumCallbacks {
+    fun onAlbumLoad(cursor: Cursor?)
+
+    fun onAlbumReset()
   }
 
-  public interface AlbumCallbacks {
-    void onAlbumLoad(Cursor cursor);
-
-    void onAlbumReset();
+  companion object {
+    private const val LOADER_ID = 1
+    private const val STATE_CURRENT_SELECTION = "state_current_selection"
   }
 }

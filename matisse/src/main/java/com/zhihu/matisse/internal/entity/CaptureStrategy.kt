@@ -13,21 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.entity;
+package com.zhihu.matisse.internal.entity
 
-public class CaptureStrategy {
-
-    public final boolean isPublic;
-    public final String authority;
-    public final String directory;
-
-    public CaptureStrategy(boolean isPublic, String authority) {
-        this(isPublic, authority, null);
-    }
-
-    public CaptureStrategy(boolean isPublic, String authority, String directory) {
-        this.isPublic = isPublic;
-        this.authority = authority;
-        this.directory = directory;
-    }
-}
+class CaptureStrategy @JvmOverloads constructor(@JvmField val isPublic: Boolean, @JvmField val authority: String, @JvmField val directory: String? = null)
