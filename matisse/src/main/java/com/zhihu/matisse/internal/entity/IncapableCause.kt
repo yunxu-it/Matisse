@@ -13,71 +13,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.entity;
+package com.zhihu.matisse.internal.entity
 
-import android.content.Context;
-import androidx.annotation.IntDef;
-import androidx.fragment.app.FragmentActivity;
-import android.widget.Toast;
+import android.content.Context
+import android.widget.Toast
+import androidx.annotation.IntDef
+import androidx.fragment.app.FragmentActivity
+import com.zhihu.matisse.internal.ui.widget.IncapableDialog
+import kotlin.annotation.AnnotationRetention.SOURCE
 
-import com.zhihu.matisse.internal.ui.widget.IncapableDialog;
+class IncapableCause {
+  @Retention(SOURCE)
+  @IntDef(value = [TOAST, DIALOG, NONE])
+  annotation class Form
 
-import java.lang.annotation.Retention;
+  private var mForm = TOAST
+  private var mTitle: String? = null
+  private val mMessage: String
 
-import static java.lang.annotation.RetentionPolicy.SOURCE;
+  constructor(message: String) {
+    mMessage = message
+  }
 
-@SuppressWarnings("unused")
-public class IncapableCause {
-    public static final int TOAST = 0x00;
-    public static final int DIALOG = 0x01;
-    public static final int NONE = 0x02;
+  constructor(title: String?, message: String) {
+    mTitle = title
+    mMessage = message
+  }
 
-    @Retention(SOURCE)
-    @IntDef({TOAST, DIALOG, NONE})
-    public @interface Form {
-    }
+  constructor(@Form form: Int, message: String) {
+    mForm = form
+    mMessage = message
+  }
 
-    private int mForm = TOAST;
-    private String mTitle;
-    private String mMessage;
+  constructor(@Form form: Int, title: String?, message: String) {
+    mForm = form
+    mTitle = title
+    mMessage = message
+  }
 
-    public IncapableCause(String message) {
-        mMessage = message;
-    }
+  companion object {
+    const val TOAST: Int = 0x00
+    const val DIALOG: Int = 0x01
+    const val NONE: Int = 0x02
 
-    public IncapableCause(String title, String message) {
-        mTitle = title;
-        mMessage = message;
-    }
+    @JvmStatic
+    fun handleCause(context: Context, cause: IncapableCause?) {
+      if (cause == null) return
 
-    public IncapableCause(@Form int form, String message) {
-        mForm = form;
-        mMessage = message;
-    }
-
-    public IncapableCause(@Form int form, String title, String message) {
-        mForm = form;
-        mTitle = title;
-        mMessage = message;
-    }
-
-    public static void handleCause(Context context, IncapableCause cause) {
-        if (cause == null)
-            return;
-
-        switch (cause.mForm) {
-            case NONE:
-                // do nothing.
-                break;
-            case DIALOG:
-                IncapableDialog incapableDialog = IncapableDialog.newInstance(cause.mTitle, cause.mMessage);
-                incapableDialog.show(((FragmentActivity) context).getSupportFragmentManager(),
-                        IncapableDialog.class.getName());
-                break;
-            case TOAST:
-            default:
-                Toast.makeText(context, cause.mMessage, Toast.LENGTH_SHORT).show();
-                break;
+      when (cause.mForm) {
+        NONE -> {}
+        DIALOG -> {
+          val incapableDialog = IncapableDialog.newInstance(cause.mTitle, cause.mMessage)
+          incapableDialog.show(
+            (context as FragmentActivity).supportFragmentManager,
+            IncapableDialog::class.java.name
+          )
         }
+
+        TOAST -> Toast.makeText(context, cause.mMessage, Toast.LENGTH_SHORT).show()
+        else -> Toast.makeText(context, cause.mMessage, Toast.LENGTH_SHORT).show()
+      }
     }
+  }
 }

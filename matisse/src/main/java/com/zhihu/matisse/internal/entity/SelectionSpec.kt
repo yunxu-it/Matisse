@@ -14,108 +14,155 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.entity;
+package com.zhihu.matisse.internal.entity
 
-import android.content.pm.ActivityInfo;
+import android.content.pm.ActivityInfo
+import androidx.annotation.StyleRes
+import com.zhihu.matisse.MimeType
+import com.zhihu.matisse.R
+import com.zhihu.matisse.engine.ImageEngine
+import com.zhihu.matisse.engine.impl.GlideEngine
+import com.zhihu.matisse.filter.Filter
+import com.zhihu.matisse.listener.OnCheckedListener
+import com.zhihu.matisse.listener.OnSelectedListener
 
-import androidx.annotation.StyleRes;
+class SelectionSpec private constructor() {
+  @JvmField
+  var mimeTypeSet: Set<MimeType>? = null
 
-import com.zhihu.matisse.MimeType;
-import com.zhihu.matisse.R;
-import com.zhihu.matisse.engine.ImageEngine;
-import com.zhihu.matisse.engine.impl.GlideEngine;
-import com.zhihu.matisse.filter.Filter;
-import com.zhihu.matisse.listener.OnCheckedListener;
-import com.zhihu.matisse.listener.OnSelectedListener;
+  @JvmField
+  var mediaTypeExclusive: Boolean = false
 
-import java.util.List;
-import java.util.Set;
+  /**
+   * 是否仅显示一种媒体类型，如果选择的媒体仅为图片或视频时。
+   */
+  var showSingleMediaType: Boolean = false
 
-public final class SelectionSpec {
+  @JvmField
+  @StyleRes
+  var themeId: Int = 0
 
-    public Set<MimeType> mimeTypeSet;
-    public boolean mediaTypeExclusive;
-    public boolean showSingleMediaType;
-    @StyleRes
-    public int themeId;
-    public int orientation;
-    public boolean countable;
-    public int maxSelectable;
-    public int maxImageSelectable;
-    public int maxVideoSelectable;
-    public List<Filter> filters;
-    public boolean capture;
-    public CaptureStrategy captureStrategy;
-    public int spanCount;
-    public int gridExpectedSize;
-    public float thumbnailScale;
-    public ImageEngine imageEngine;
-    public boolean hasInited;
-    public OnSelectedListener onSelectedListener;
-    public boolean originalable;
-    public boolean autoHideToobar;
-    public int originalMaxSize;
-    public OnCheckedListener onCheckedListener;
-    public boolean showPreview;
+  @JvmField
+  var orientation: Int = 0
 
-    private SelectionSpec() {
+  /**
+   * 勾选圆圈显示计数
+   */
+  @JvmField
+  var countable: Boolean = false
+
+  @JvmField
+  var maxSelectable: Int = 0
+
+  @JvmField
+  var maxImageSelectable: Int = 0
+
+  @JvmField
+  var maxVideoSelectable: Int = 0
+
+  @JvmField
+  var filters: List<Filter>? = null
+
+  /**
+   * 开启拍照功能
+   */
+  @JvmField
+  var capture: Boolean = false
+
+  @JvmField
+  var captureStrategy: CaptureStrategy? = null
+
+  @JvmField
+  var spanCount: Int = 0
+
+  @JvmField
+  var gridExpectedSize: Int = 0
+
+  @JvmField
+  var thumbnailScale: Float = 0f
+
+  @JvmField
+  var imageEngine: ImageEngine = GlideEngine()
+
+  @JvmField
+  var hasInited: Boolean = false
+
+  @JvmField
+  var onSelectedListener: OnSelectedListener? = null
+
+  @JvmField
+  var originalable: Boolean = false
+
+  @JvmField
+  var autoHideToolbar: Boolean = false
+
+  @JvmField
+  var originalMaxSize: Int = 0
+
+  @JvmField
+  var onCheckedListener: OnCheckedListener? = null
+
+  @JvmField
+  var showPreview: Boolean = false
+
+  private fun reset() {
+    mimeTypeSet = null
+    mediaTypeExclusive = true
+    showSingleMediaType = false
+    themeId = R.style.Matisse_Zhihu
+    orientation = 0
+    countable = false
+    maxSelectable = 1
+    maxImageSelectable = 0
+    maxVideoSelectable = 0
+    filters = null
+    capture = false
+    captureStrategy = null
+    spanCount = 3
+    gridExpectedSize = 0
+    thumbnailScale = 0.5f
+    imageEngine = GlideEngine()
+    hasInited = true
+    originalable = false
+    autoHideToolbar = false
+    originalMaxSize = Int.MAX_VALUE
+    showPreview = true
+  }
+
+  fun singleSelectionModeEnabled(): Boolean {
+    return !countable && (maxSelectable == 1 || (maxImageSelectable == 1 && maxVideoSelectable == 1))
+  }
+
+  fun needOrientationRestriction(): Boolean {
+    return orientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+  }
+
+  fun onlyShowImages(): Boolean {
+    return showSingleMediaType && MimeType.ofImage().containsAll(mimeTypeSet ?: emptySet())
+  }
+
+  fun onlyShowVideos(): Boolean {
+    return showSingleMediaType && MimeType.ofVideo().containsAll(mimeTypeSet ?: emptySet())
+  }
+
+  fun onlyShowGif(): Boolean {
+    return showSingleMediaType && MimeType.ofGif() == mimeTypeSet
+  }
+
+  private object InstanceHolder {
+    val instance: SelectionSpec = SelectionSpec()
+  }
+
+  companion object {
+    @JvmStatic
+    fun getInstance(): SelectionSpec {
+      return InstanceHolder.instance
     }
 
-    public static SelectionSpec getInstance() {
-        return InstanceHolder.INSTANCE;
+    fun getCleanInstance(): SelectionSpec {
+      val selectionSpec: SelectionSpec = InstanceHolder.instance
+      selectionSpec.reset()
+      return selectionSpec
     }
-
-    public static SelectionSpec getCleanInstance() {
-        SelectionSpec selectionSpec = getInstance();
-        selectionSpec.reset();
-        return selectionSpec;
-    }
-
-    private void reset() {
-        mimeTypeSet = null;
-        mediaTypeExclusive = true;
-        showSingleMediaType = false;
-        themeId = R.style.Matisse_Zhihu;
-        orientation = 0;
-        countable = false;
-        maxSelectable = 1;
-        maxImageSelectable = 0;
-        maxVideoSelectable = 0;
-        filters = null;
-        capture = false;
-        captureStrategy = null;
-        spanCount = 3;
-        gridExpectedSize = 0;
-        thumbnailScale = 0.5f;
-        imageEngine = new GlideEngine();
-        hasInited = true;
-        originalable = false;
-        autoHideToobar = false;
-        originalMaxSize = Integer.MAX_VALUE;
-        showPreview = true;
-    }
-
-    public boolean singleSelectionModeEnabled() {
-        return !countable && (maxSelectable == 1 || (maxImageSelectable == 1 && maxVideoSelectable == 1));
-    }
-
-    public boolean needOrientationRestriction() {
-        return orientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
-    }
-
-    public boolean onlyShowImages() {
-        return showSingleMediaType && MimeType.ofImage().containsAll(mimeTypeSet);
-    }
-
-    public boolean onlyShowVideos() {
-        return showSingleMediaType && MimeType.ofVideo().containsAll(mimeTypeSet);
-    }
-
-    public boolean onlyShowGif() {
-        return showSingleMediaType && MimeType.ofGif().equals(mimeTypeSet);
-    }
-
-    private static final class InstanceHolder {
-        private static final SelectionSpec INSTANCE = new SelectionSpec();
-    }
+  }
 }

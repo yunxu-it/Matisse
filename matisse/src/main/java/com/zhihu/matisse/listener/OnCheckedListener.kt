@@ -1,9 +1,8 @@
-package com.zhihu.matisse.listener;
-
+package com.zhihu.matisse.listener
 
 /**
- *  when original is enabled , callback immediately when user check or uncheck original.
+ * when original is enabled , callback immediately when user check or uncheck original.
  */
-public interface OnCheckedListener {
-    void onCheck(boolean isChecked);
+interface OnCheckedListener {
+  fun onCheck(isChecked: Boolean)
 }

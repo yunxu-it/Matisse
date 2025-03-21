@@ -201,7 +201,7 @@ public abstract class BasePreviewActivity extends AppCompatActivity implements V
 
     @Override
     public void onClick() {
-        if (!mSpec.autoHideToobar) {
+        if (!mSpec.autoHideToolbar) {
             return;
         }
 

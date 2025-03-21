@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.zhihu.matisse.listener
 
-package com.zhihu.matisse.listener;
+import android.net.Uri
 
-import android.net.Uri;
-import androidx.annotation.NonNull;
-
-import java.util.List;
-
-public interface OnSelectedListener {
-    /**
-     * @param uriList the selected item {@link Uri} list.
-     * @param pathList the selected item file path list.
-     */
-    void onSelected(@NonNull List<Uri> uriList, @NonNull List<String> pathList);
+interface OnSelectedListener {
+  /**
+   * @param uriList the selected item [Uri] list.
+   * @param pathList the selected item file path list.
+   */
+  fun onSelected(uriList: List<Uri?>, pathList: List<String?>)
 }

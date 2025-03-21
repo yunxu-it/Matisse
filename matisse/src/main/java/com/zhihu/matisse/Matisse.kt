@@ -13,139 +13,122 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse;
+package com.zhihu.matisse
 
-import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-
-import com.zhihu.matisse.ui.MatisseActivity;
-
-import java.lang.ref.WeakReference;
-import java.util.List;
-import java.util.Set;
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import androidx.fragment.app.Fragment
+import com.zhihu.matisse.ui.MatisseActivity
+import java.lang.ref.WeakReference
 
 /**
  * Entry for Matisse's media selection.
  */
-public final class Matisse {
+class Matisse private constructor(activity: Activity?, fragment: Fragment? = null) {
+  private val mContext = WeakReference(activity)
+  private val mFragment = WeakReference(fragment)
 
-    private final WeakReference<Activity> mContext;
-    private final WeakReference<Fragment> mFragment;
+  private constructor(fragment: Fragment) : this(fragment.activity, fragment)
 
-    private Matisse(Activity activity) {
-        this(activity, null);
-    }
+  /**
+   * MIME types the selection constrains on.
+   *
+   *
+   * Types not included in the set will still be shown in the grid but can't be chosen.
+   *
+   * @param mimeTypes          MIME types set user can choose from.
+   * @param mediaTypeExclusive Whether can choose images and videos at the same time during one single choosing
+   * process. true corresponds to not being able to choose images and videos at the same
+   * time, and false corresponds to being able to do this.
+   * @return [SelectionCreator] to build select specifications.
+   * @see MimeType
+   *
+   * @see SelectionCreator
+   */
+  /**
+   * MIME types the selection constrains on.
+   *
+   *
+   * Types not included in the set will still be shown in the grid but can't be chosen.
+   *
+   * @param mimeTypes MIME types set user can choose from.
+   * @return [SelectionCreator] to build select specifications.
+   * @see MimeType
+   *
+   * @see SelectionCreator
+   */
+  @JvmOverloads
+  fun choose(mimeTypes: Set<MimeType>, mediaTypeExclusive: Boolean = true): SelectionCreator {
+    return SelectionCreator(this, mimeTypes, mediaTypeExclusive)
+  }
 
-    private Matisse(Fragment fragment) {
-        this(fragment.getActivity(), fragment);
-    }
+  val activity: Activity?
+    get() = mContext.get()
 
-    private Matisse(Activity activity, Fragment fragment) {
-        mContext = new WeakReference<>(activity);
-        mFragment = new WeakReference<>(fragment);
-    }
+  val fragment: Fragment?
+    get() = mFragment.get()
 
+  companion object {
     /**
      * Start Matisse from an Activity.
-     * <p>
-     * This Activity's {@link Activity#onActivityResult(int, int, Intent)} will be called when user
+     *
+     *
+     * This Activity's [Activity.onActivityResult] will be called when user
      * finishes selecting.
      *
      * @param activity Activity instance.
      * @return Matisse instance.
      */
-    public static Matisse from(Activity activity) {
-        return new Matisse(activity);
+    fun from(activity: Activity): Matisse {
+      return Matisse(activity)
     }
 
     /**
      * Start Matisse from a Fragment.
-     * <p>
-     * This Fragment's {@link Fragment#onActivityResult(int, int, Intent)} will be called when user
+     *
+     *
+     * This Fragment's [Fragment.onActivityResult] will be called when user
      * finishes selecting.
      *
      * @param fragment Fragment instance.
      * @return Matisse instance.
      */
-    public static Matisse from(Fragment fragment) {
-        return new Matisse(fragment);
+    fun from(fragment: Fragment): Matisse {
+      return Matisse(fragment)
     }
 
     /**
-     * Obtain user selected media' {@link Uri} list in the starting Activity or Fragment.
+     * Obtain user selected media' [Uri] list in the starting Activity or Fragment.
      *
-     * @param data Intent passed by {@link Activity#onActivityResult(int, int, Intent)} or
-     *             {@link Fragment#onActivityResult(int, int, Intent)}.
-     * @return User selected media' {@link Uri} list.
+     * @param data Intent passed by [Activity.onActivityResult] or
+     * [Fragment.onActivityResult].
+     * @return User selected media' [Uri] list.
      */
-    public static List<Uri> obtainResult(Intent data) {
-        return data.getParcelableArrayListExtra(MatisseActivity.EXTRA_RESULT_SELECTION);
+    fun obtainResult(data: Intent?): List<Uri>? {
+      return data?.getParcelableArrayListExtra(MatisseActivity.EXTRA_RESULT_SELECTION)
     }
 
     /**
      * Obtain user selected media path list in the starting Activity or Fragment.
      *
-     * @param data Intent passed by {@link Activity#onActivityResult(int, int, Intent)} or
-     *             {@link Fragment#onActivityResult(int, int, Intent)}.
+     * @param data Intent passed by [Activity.onActivityResult] or
+     * [Fragment.onActivityResult].
      * @return User selected media path list.
      */
-    public static List<String> obtainPathResult(Intent data) {
-        return data.getStringArrayListExtra(MatisseActivity.EXTRA_RESULT_SELECTION_PATH);
+    fun obtainPathResult(data: Intent?): List<String>? {
+      return data?.getStringArrayListExtra(MatisseActivity.EXTRA_RESULT_SELECTION_PATH)
     }
 
     /**
      * Obtain state whether user decide to use selected media in original
      *
-     * @param data Intent passed by {@link Activity#onActivityResult(int, int, Intent)} or
-     *             {@link Fragment#onActivityResult(int, int, Intent)}.
+     * @param data Intent passed by [Activity.onActivityResult] or
+     * [Fragment.onActivityResult].
      * @return Whether use original photo
      */
-    public static boolean obtainOriginalState(Intent data) {
-        return data.getBooleanExtra(MatisseActivity.EXTRA_RESULT_ORIGINAL_ENABLE, false);
+    fun obtainOriginalState(data: Intent?): Boolean {
+      return data?.getBooleanExtra(MatisseActivity.EXTRA_RESULT_ORIGINAL_ENABLE, false) ?: false
     }
-
-    /**
-     * MIME types the selection constrains on.
-     * <p>
-     * Types not included in the set will still be shown in the grid but can't be chosen.
-     *
-     * @param mimeTypes MIME types set user can choose from.
-     * @return {@link SelectionCreator} to build select specifications.
-     * @see MimeType
-     * @see SelectionCreator
-     */
-    public SelectionCreator choose(Set<MimeType> mimeTypes) {
-        return this.choose(mimeTypes, true);
-    }
-
-    /**
-     * MIME types the selection constrains on.
-     * <p>
-     * Types not included in the set will still be shown in the grid but can't be chosen.
-     *
-     * @param mimeTypes          MIME types set user can choose from.
-     * @param mediaTypeExclusive Whether can choose images and videos at the same time during one single choosing
-     *                           process. true corresponds to not being able to choose images and videos at the same
-     *                           time, and false corresponds to being able to do this.
-     * @return {@link SelectionCreator} to build select specifications.
-     * @see MimeType
-     * @see SelectionCreator
-     */
-    public SelectionCreator choose(Set<MimeType> mimeTypes, boolean mediaTypeExclusive) {
-        return new SelectionCreator(this, mimeTypes, mediaTypeExclusive);
-    }
-
-    @Nullable
-    Activity getActivity() {
-        return mContext.get();
-    }
-
-    @Nullable
-    Fragment getFragment() {
-        return mFragment != null ? mFragment.get() : null;
-    }
-
+  }
 }

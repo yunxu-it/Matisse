@@ -5,8 +5,8 @@ appVersionName = "1.0.0"
 
 # android build
 compileSdk = "35"
-targetSdk = "29"
-minSdk = "24"
+targetSdk = "35"
+minSdk = "26"
 
 # gradle plugin
 pluginAndroid = "8.7.2"

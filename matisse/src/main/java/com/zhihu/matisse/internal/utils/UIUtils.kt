@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.utils;
+package com.zhihu.matisse.internal.utils
 
-import android.content.Context;
+import android.content.Context
 
-public class UIUtils {
-
-    public static int spanCount(Context context, int gridExpectedSize) {
-        int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
-        float expected = (float) screenWidth / (float) gridExpectedSize;
-        int spanCount = Math.round(expected);
-        if (spanCount == 0) {
-            spanCount = 1;
-        }
-        return spanCount;
+object UIUtils {
+  @JvmStatic
+  fun spanCount(context: Context, gridExpectedSize: Int): Int {
+    val screenWidth = context.resources.displayMetrics.widthPixels
+    val expected = screenWidth.toFloat() / gridExpectedSize.toFloat()
+    var spanCount = Math.round(expected)
+    if (spanCount == 0) {
+      spanCount = 1
     }
-
+    return spanCount
+  }
 }
