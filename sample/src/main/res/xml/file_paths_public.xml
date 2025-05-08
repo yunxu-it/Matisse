@@ -18,4 +18,7 @@
     <external-path
         name="my_images"
         path="Pictures"/>
+    <external-path
+        name="my_videos"
+        path="Movies"/>
 </paths>

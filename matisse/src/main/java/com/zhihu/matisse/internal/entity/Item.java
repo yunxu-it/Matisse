@@ -39,7 +39,8 @@ public class Item implements Parcelable {
             return new Item[size];
         }
     };
-    public static final long ITEM_ID_CAPTURE = -1;
+    public static final long ITEM_ID_CAPTURE_PHOTO = -1;
+    public static final long ITEM_ID_CAPTURE_VIDEO = -2;
     public static final String ITEM_DISPLAY_NAME_CAPTURE = "Capture";
     public final long id;
     public final String mimeType;
@@ -73,10 +74,10 @@ public class Item implements Parcelable {
     }
 
     public static Item valueOf(Cursor cursor) {
-        return new Item(cursor.getLong(cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)),
-                cursor.getString(cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE)),
-                cursor.getLong(cursor.getColumnIndex(MediaStore.MediaColumns.SIZE)),
-                cursor.getLong(cursor.getColumnIndex("duration")));
+        return new Item(cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)),
+                cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE)),
+                cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)),
+                cursor.getLong(cursor.getColumnIndexOrThrow("duration")));
     }
 
     @Override
@@ -97,8 +98,12 @@ public class Item implements Parcelable {
         return uri;
     }
 
-    public boolean isCapture() {
-        return id == ITEM_ID_CAPTURE;
+    public boolean isCapturePhoto() {
+        return id == ITEM_ID_CAPTURE_PHOTO;
+    }
+
+    public boolean isCaptureVideo() {
+        return id == ITEM_ID_CAPTURE_VIDEO;
     }
 
     public boolean isImage() {

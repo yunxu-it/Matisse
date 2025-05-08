@@ -1,5 +1,6 @@
 package com.zhihu.matisse.sample
 
+import android.Manifest.permission.CAMERA
 import android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.READ_MEDIA_IMAGES
@@ -58,6 +59,7 @@ object DynamicPermission {
       }
       list.add(READ_EXTERNAL_STORAGE) // 29及以下访问权限
     }
+    list.add(CAMERA)
     return list.toTypedArray()
   }
 

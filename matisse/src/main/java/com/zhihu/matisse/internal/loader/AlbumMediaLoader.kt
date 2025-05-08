@@ -37,17 +37,30 @@ import com.zhihu.matisse.internal.utils.MediaStoreCompat
 /**
  * Load images and videos into a single cursor.
  */
-class AlbumMediaLoader private constructor(context: Context, selection: String, selectionArgs: Array<String>, private val mEnableCapture: Boolean) :
+class AlbumMediaLoader private constructor(
+  context: Context,
+  selection: String,
+  selectionArgs: Array<String>,
+  private val mEnableCapturePhoto: Boolean,
+  private val mEnableCaptureVideo: Boolean
+) :
   CursorLoader(context, QUERY_URI, PROJECTION, selection, selectionArgs, ORDER_BY) {
 
   override fun loadInBackground(): Cursor? {
     val result = super.loadInBackground()
-    if (!mEnableCapture || !MediaStoreCompat.hasCameraFeature(context)) {
-      return result
+    if (MediaStoreCompat.hasCameraFeature(context)) {
+      if (mEnableCapturePhoto || mEnableCaptureVideo) {
+        val dummy = MatrixCursor(PROJECTION)
+        if (mEnableCapturePhoto) {
+          dummy.addRow(arrayOf<Any>(Item.ITEM_ID_CAPTURE_PHOTO, Item.ITEM_DISPLAY_NAME_CAPTURE, "", 0, 0))
+        }
+        if (mEnableCaptureVideo) {
+          dummy.addRow(arrayOf<Any>(Item.ITEM_ID_CAPTURE_VIDEO, Item.ITEM_DISPLAY_NAME_CAPTURE, "", 0, 0))
+        }
+        return MergeCursor(arrayOf(dummy, result))
+      }
     }
-    val dummy = MatrixCursor(PROJECTION)
-    dummy.addRow(arrayOf<Any>(Item.ITEM_ID_CAPTURE, Item.ITEM_DISPLAY_NAME_CAPTURE, "", 0, 0))
-    return MergeCursor(arrayOf(dummy, result))
+    return result
   }
 
   override fun onContentChanged() { // FIXME a dirty way to fix loading multiple times
@@ -113,7 +126,8 @@ class AlbumMediaLoader private constructor(context: Context, selection: String, 
     fun newInstance(context: Context, album: Album, capture: Boolean): CursorLoader {
       val selection: String
       val selectionArgs: Array<String>
-      val enableCapture: Boolean
+      var enableCapturePhoto: Boolean = false
+      var enableCaptureVideo: Boolean = false
 
       if (album.isAll) {
         if (SelectionSpec.getInstance().onlyShowGif()) {
@@ -135,7 +149,8 @@ class AlbumMediaLoader private constructor(context: Context, selection: String, 
           selection = SELECTION_ALL
           selectionArgs = SELECTION_ALL_ARGS
         }
-        enableCapture = capture
+        enableCapturePhoto = SelectionSpec.getInstance().showImages()
+        enableCaptureVideo = SelectionSpec.getInstance().showVideos()
       } else {
         if (SelectionSpec.getInstance().onlyShowGif()) {
           selection = SELECTION_ALBUM_FOR_GIF
@@ -156,9 +171,8 @@ class AlbumMediaLoader private constructor(context: Context, selection: String, 
           selection = SELECTION_ALBUM
           selectionArgs = getSelectionAlbumArgs(album.id)
         }
-        enableCapture = false
       }
-      return AlbumMediaLoader(context, selection, selectionArgs, enableCapture)
+      return AlbumMediaLoader(context, selection, selectionArgs, enableCapturePhoto, enableCaptureVideo)
     }
   }
 }

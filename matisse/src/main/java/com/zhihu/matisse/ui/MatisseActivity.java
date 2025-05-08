@@ -20,21 +20,15 @@ import android.content.Intent;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.base.BaseDBActivity;
@@ -71,11 +65,14 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
   public static final String EXTRA_RESULT_ORIGINAL_ENABLE = "extra_result_original_enable";
 
   private static final int REQUEST_CODE_PREVIEW = 23;
-  private static final int REQUEST_CODE_CAPTURE = 24;
+  private static final int REQUEST_CODE_CAPTURE_PHOTO = 24;
+  private static final int REQUEST_CODE_CAPTURE_VIDEO = 25;
   public static final String CHECK_STATE = "checkState";
+
   private final AlbumCollection mAlbumCollection = new AlbumCollection();
-  private MediaStoreCompat mMediaStoreCompat;
   private final SelectedItemCollection mSelectedCollection = new SelectedItemCollection(this);
+
+  private MediaStoreCompat mMediaStoreCompat;
   private SelectionSpec mSpec;
 
   private AlbumsSpinner mAlbumsSpinner;
@@ -232,7 +229,7 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
         }
         updateBottomToolbar();
       }
-    } else if (requestCode == REQUEST_CODE_CAPTURE) {
+    } else if (requestCode == REQUEST_CODE_CAPTURE_PHOTO || requestCode == REQUEST_CODE_CAPTURE_VIDEO) {
       // Just pass the data back to previous calling Activity.
       Uri contentUri = mMediaStoreCompat.getCurrentPhotoUri();
       String path = mMediaStoreCompat.getCurrentPhotoPath();
@@ -244,10 +241,6 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
       result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selected);
       result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPath);
       setResult(RESULT_OK, result);
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-        MatisseActivity.this.revokeUriPermission(contentUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-      }
-
       new SingleMediaScanner(this.getApplicationContext(), path, new SingleMediaScanner.ScanListener() {
         @Override public void onScanFinish() {
           Log.i("SingleMediaScanner", "scan finish!");
@@ -315,8 +308,13 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
     mAlbumCollection.setStateCurrentSelection(position);
     mAlbumsAdapter.getCursor().moveToPosition(position);
     Album album = Album.valueOf(mAlbumsAdapter.getCursor());
-    if (album.isAll() && SelectionSpec.getInstance().capture) {
-      album.addCaptureCount();
+    if (album.isAll()) {
+      if (SelectionSpec.getInstance().capture) {
+        album.addCaptureCount();
+      }
+      if (SelectionSpec.getInstance().capture) {
+        album.addCaptureCount();
+      }
     }
     onAlbumSelected(album);
   }
@@ -333,8 +331,13 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
       cursor.moveToPosition(mAlbumCollection.getCurrentSelection());
       mAlbumsSpinner.setSelection(MatisseActivity.this, mAlbumCollection.getCurrentSelection());
       Album album = Album.valueOf(cursor);
-      if (album.isAll() && SelectionSpec.getInstance().capture) {
-        album.addCaptureCount();
+      if (album.isAll()) {
+        if (SelectionSpec.getInstance().enablePhotoCapture()) {
+          album.addCaptureCount();
+        }
+        if (SelectionSpec.getInstance().enableVideoCapture()) {
+          album.addCaptureCount();
+        }
       }
       onAlbumSelected(album);
     });
@@ -378,9 +381,15 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
     return mSelectedCollection;
   }
 
-  @Override public void capture() {
+  @Override public void capturePhoto() {
     if (mMediaStoreCompat != null) {
-      mMediaStoreCompat.dispatchCaptureIntent(this, REQUEST_CODE_CAPTURE);
+      mMediaStoreCompat.dispatchCapturePhotoIntent(this, REQUEST_CODE_CAPTURE_PHOTO);
+    }
+  }
+
+  @Override public void captureVideo() {
+    if (mMediaStoreCompat != null) {
+      mMediaStoreCompat.dispatchCaptureVideoIntent(this, REQUEST_CODE_CAPTURE_VIDEO);
     }
   }
 

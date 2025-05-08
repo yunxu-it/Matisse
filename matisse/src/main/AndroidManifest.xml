@@ -14,25 +14,39 @@
   limitations under the License.
   -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:tools="http://schemas.android.com/tools"
   package="com.zhihu.matisse">
+
+  <queries>
+    <!-- 图片拍摄 -->
+    <intent>
+      <action android:name="android.media.action.IMAGE_CAPTURE" />
+    </intent>
+    <!-- 视频拍摄 -->
+    <intent>
+      <action android:name="android.media.action.VIDEO_CAPTURE" />
+    </intent>
+  </queries>
+
 
   <!-- To handle the reselection within the app on devices running Android 14
      or higher if your app targets Android 14 (API level 34) or higher.  -->
-  <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+  <uses-permission
+    android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+    android:minSdkVersion="34" />
   <!-- Devices running Android 13 (API level 33) or higher -->
-  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-  <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-
-  <!-- Devices running Android 11 (API level 30) or higher -->
-  <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+  <uses-permission
+    android:name="android.permission.READ_MEDIA_IMAGES"
+    android:minSdkVersion="33" />
+  <uses-permission
+    android:name="android.permission.READ_MEDIA_VIDEO"
+    android:minSdkVersion="33" />
 
   <!-- Devices running Android 10 (API level 29) or lower  30及以上受分区存储限制，需要申请权限-->
   <uses-permission
     android:name="android.permission.READ_EXTERNAL_STORAGE"
     android:maxSdkVersion="32" />
 
-  <application>
+  <application android:requestLegacyExternalStorage="true">
     <activity
       android:name="com.zhihu.matisse.ui.MatisseActivity"
       android:exported="true" />

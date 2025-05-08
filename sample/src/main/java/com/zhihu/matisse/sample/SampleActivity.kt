@@ -121,6 +121,8 @@ class SampleActivity : AppCompatActivity() {
         Matisse.from(this@SampleActivity)
           .choose(MimeType.ofImage())
           .countable(false)
+          .capture(true)
+          .captureStrategy(CaptureStrategy(true, "com.zhihu.matisse.sample.fileprovider", "test"))
           .addFilter(GifSizeFilter(320, 320, 5 * Filter.K * Filter.K))
           .maxSelectable(9)
           .originalEnable(true)

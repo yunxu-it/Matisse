@@ -149,6 +149,22 @@ class SelectionSpec private constructor() {
     return showSingleMediaType && MimeType.ofGif() == mimeTypeSet
   }
 
+  fun showImages(): Boolean {
+    return MimeType.ofImage().any { mimeType -> mimeType in (mimeTypeSet ?: emptySet()) }
+  }
+
+  fun showVideos(): Boolean {
+    return MimeType.ofVideo().any { mimeType -> mimeType in (mimeTypeSet ?: emptySet()) }
+  }
+
+  fun enablePhotoCapture(): Boolean {
+    return capture && showImages()
+  }
+
+  fun enableVideoCapture(): Boolean {
+    return capture && showVideos()
+  }
+
   private object InstanceHolder {
     val instance: SelectionSpec = SelectionSpec()
   }

@@ -27,9 +27,9 @@
     android:layout_gravity="center"
     android:drawablePadding="8dp"
     android:gravity="center"
-    android:text="@string/photo_grid_capture_photo"
+    android:text="@string/photo_grid_capture_video"
     android:textColor="?capture.textColor"
     android:textSize="14sp"
-    app:drawableTopCompat="@drawable/ic_photo_camera_white_24dp" />
+    app:drawableTopCompat="@drawable/baseline_video_camera_back_24" />
 
 </com.zhihu.matisse.internal.ui.widget.SquareFrameLayout>
