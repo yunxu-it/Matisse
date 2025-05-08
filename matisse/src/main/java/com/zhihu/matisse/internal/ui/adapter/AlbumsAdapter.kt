@@ -26,18 +26,19 @@ import android.widget.TextView
 import com.zhihu.matisse.R
 import com.zhihu.matisse.internal.entity.Album
 import com.zhihu.matisse.internal.entity.SelectionSpec
+import com.zhihu.matisse.internal.utils.autoClose
 
 class AlbumsAdapter : CursorAdapter {
   private var mPlaceholder: Drawable? = null
 
   constructor(context: Context, c: Cursor?, autoRequery: Boolean) : super(context, c, autoRequery) {
-    context.theme.obtainStyledAttributes(intArrayOf(R.attr.album_thumbnail_placeholder)).use { ta ->
+    context.theme.obtainStyledAttributes(intArrayOf(R.attr.album_thumbnail_placeholder)).autoClose { ta ->
       mPlaceholder = ta.getDrawable(0)
     }
   }
 
   constructor(context: Context, c: Cursor?, flags: Int) : super(context, c, flags) {
-    context.theme.obtainStyledAttributes(intArrayOf(R.attr.album_thumbnail_placeholder)).use { ta ->
+    context.theme.obtainStyledAttributes(intArrayOf(R.attr.album_thumbnail_placeholder)).autoClose { ta ->
       mPlaceholder = ta.getDrawable(0)
     }
   }
