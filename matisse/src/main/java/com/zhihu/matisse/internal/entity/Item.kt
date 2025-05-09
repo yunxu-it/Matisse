@@ -14,136 +14,91 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.entity;
+package com.zhihu.matisse.internal.entity
 
-import android.content.ContentUris;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.provider.MediaStore;
-import androidx.annotation.Nullable;
+import android.content.ContentUris
+import android.database.Cursor
+import android.net.Uri
+import android.os.Parcel
+import android.os.Parcelable
+import android.os.Parcelable.Creator
+import android.provider.MediaStore.Files
+import android.provider.MediaStore.Files.FileColumns
+import android.provider.MediaStore.Images.Media
+import android.provider.MediaStore.MediaColumns
+import android.provider.MediaStore.Video
+import com.zhihu.matisse.MimeType
+import kotlinx.parcelize.Parcelize
 
-import com.zhihu.matisse.MimeType;
+@Parcelize
+class Item(
+  val id: Long,
+  val mimeType: String,
+  @JvmField
+  val size: Long,
+  @JvmField
+  var duration: Long
+) : Parcelable {
 
-public class Item implements Parcelable {
-    public static final Creator<Item> CREATOR = new Creator<Item>() {
-        @Override
-        @Nullable
-        public Item createFromParcel(Parcel source) {
-            return new Item(source);
-        }
+  @JvmField
+  val contentUri: Uri = if (isImage) {
+    Media.EXTERNAL_CONTENT_URI
+  } else if (isVideo) {
+    Video.Media.EXTERNAL_CONTENT_URI
+  } else {
+    Files.getContentUri("external")
+  }.let {
+    ContentUris.withAppendedId(it, id)
+  }
 
-        @Override
-        public Item[] newArray(int size) {
-            return new Item[size];
-        }
-    };
-    public static final long ITEM_ID_CAPTURE_PHOTO = -1;
-    public static final long ITEM_ID_CAPTURE_VIDEO = -2;
-    public static final String ITEM_DISPLAY_NAME_CAPTURE = "Capture";
-    public final long id;
-    public final String mimeType;
-    public final Uri uri;
-    public final long size;
-    public final long duration; // only for video, in ms
+  val isCapturePhoto: Boolean
+    get() = id == ITEM_ID_CAPTURE_PHOTO
 
-    private Item(long id, String mimeType, long size, long duration) {
-        this.id = id;
-        this.mimeType = mimeType;
-        Uri contentUri;
-        if (isImage()) {
-            contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        } else if (isVideo()) {
-            contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-        } else {
-            // ?
-            contentUri = MediaStore.Files.getContentUri("external");
-        }
-        this.uri = ContentUris.withAppendedId(contentUri, id);
-        this.size = size;
-        this.duration = duration;
+  val isCaptureVideo: Boolean
+    get() = id == ITEM_ID_CAPTURE_VIDEO
+
+  val isImage: Boolean
+    get() = MimeType.isImage(mimeType)
+
+  val isGif: Boolean
+    get() = MimeType.isGif(mimeType)
+
+  val isVideo: Boolean
+    get() = MimeType.isVideo(mimeType)
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is Item) {
+      return false
     }
 
-    private Item(Parcel source) {
-        id = source.readLong();
-        mimeType = source.readString();
-        uri = source.readParcelable(Uri.class.getClassLoader());
-        size = source.readLong();
-        duration = source.readLong();
-    }
+    return id == other.id && (mimeType != null && mimeType == other.mimeType || (mimeType == null && other.mimeType == null)) && (contentUri != null && contentUri == other.contentUri || (contentUri == null && other.contentUri == null)) && size == other.size && duration == other.duration
+  }
 
-    public static Item valueOf(Cursor cursor) {
-        return new Item(cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)),
-                cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE)),
-                cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)),
-                cursor.getLong(cursor.getColumnIndexOrThrow("duration")));
+  override fun hashCode(): Int {
+    var result = 1
+    result = 31 * result + id.hashCode()
+    if (mimeType != null) {
+      result = 31 * result + mimeType.hashCode()
     }
+    result = 31 * result + contentUri.hashCode()
+    result = 31 * result + size.hashCode()
+    result = 31 * result + duration.hashCode()
+    return result
+  }
 
-    @Override
-    public int describeContents() {
-        return 0;
+  companion object {
+    const val ITEM_ID_CAPTURE_PHOTO: Long = -1
+    const val ITEM_ID_CAPTURE_VIDEO: Long = -2
+    const val ITEM_DISPLAY_NAME_CAPTURE: String = "Capture"
+
+    @JvmStatic
+    fun valueOf(cursor: Cursor): Item {
+      return Item(
+        cursor.getLong(cursor.getColumnIndexOrThrow(FileColumns._ID)),
+        cursor.getString(cursor.getColumnIndexOrThrow(MediaColumns.MIME_TYPE)),
+        cursor.getLong(cursor.getColumnIndexOrThrow(MediaColumns.SIZE)),
+        cursor.getLong(cursor.getColumnIndexOrThrow("duration"))
+      )
     }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(id);
-        dest.writeString(mimeType);
-        dest.writeParcelable(uri, 0);
-        dest.writeLong(size);
-        dest.writeLong(duration);
-    }
-
-    public Uri getContentUri() {
-        return uri;
-    }
-
-    public boolean isCapturePhoto() {
-        return id == ITEM_ID_CAPTURE_PHOTO;
-    }
-
-    public boolean isCaptureVideo() {
-        return id == ITEM_ID_CAPTURE_VIDEO;
-    }
-
-    public boolean isImage() {
-        return MimeType.isImage(mimeType);
-    }
-
-    public boolean isGif() {
-        return MimeType.isGif(mimeType);
-    }
-
-    public boolean isVideo() {
-        return MimeType.isVideo(mimeType);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Item)) {
-            return false;
-        }
-
-        Item other = (Item) obj;
-        return id == other.id
-                && (mimeType != null && mimeType.equals(other.mimeType)
-                    || (mimeType == null && other.mimeType == null))
-                && (uri != null && uri.equals(other.uri)
-                    || (uri == null && other.uri == null))
-                && size == other.size
-                && duration == other.duration;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = 1;
-        result = 31 * result + Long.valueOf(id).hashCode();
-        if (mimeType != null) {
-            result = 31 * result + mimeType.hashCode();
-        }
-        result = 31 * result + uri.hashCode();
-        result = 31 * result + Long.valueOf(size).hashCode();
-        result = 31 * result + Long.valueOf(duration).hashCode();
-        return result;
-    }
+  }
 }

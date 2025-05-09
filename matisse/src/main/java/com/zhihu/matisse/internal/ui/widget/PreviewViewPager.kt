@@ -13,26 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.ui.widget;
+package com.zhihu.matisse.internal.ui.widget
 
-import android.content.Context;
-import androidx.viewpager.widget.ViewPager;
-import android.util.AttributeSet;
-import android.view.View;
+import android.content.Context
+import android.util.AttributeSet
+import android.view.View
+import androidx.viewpager.widget.ViewPager
+import it.sephiroth.android.library.imagezoom.ImageViewTouch
 
-import it.sephiroth.android.library.imagezoom.ImageViewTouch;
-
-public class PreviewViewPager extends ViewPager {
-
-    public PreviewViewPager(Context context, AttributeSet attrs) {
-        super(context, attrs);
+class PreviewViewPager(context: Context, attrs: AttributeSet?) : ViewPager(context, attrs) {
+  override fun canScroll(v: View, checkV: Boolean, dx: Int, x: Int, y: Int): Boolean {
+    if (v is ImageViewTouch) {
+      return v.canScroll(dx) || super.canScroll(v, checkV, dx, x, y)
     }
-
-    @Override
-    protected boolean canScroll(View v, boolean checkV, int dx, int x, int y) {
-        if (v instanceof ImageViewTouch) {
-            return ((ImageViewTouch) v).canScroll(dx) || super.canScroll(v, checkV, dx, x, y);
-        }
-        return super.canScroll(v, checkV, dx, x, y);
-    }
+    return super.canScroll(v, checkV, dx, x, y)
+  }
 }

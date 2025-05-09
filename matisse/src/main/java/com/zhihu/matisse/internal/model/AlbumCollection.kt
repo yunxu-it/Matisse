@@ -47,7 +47,6 @@ class AlbumCollection : LoaderCallbacks<Cursor> {
         it.onAlbumLoad(data)
         mLoadFinished = true
       }
-
     }
   }
 

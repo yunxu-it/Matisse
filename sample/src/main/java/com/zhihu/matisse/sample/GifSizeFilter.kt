@@ -22,7 +22,7 @@ import com.zhihu.matisse.internal.entity.IncapableCause
 import com.zhihu.matisse.internal.entity.Item
 import com.zhihu.matisse.internal.utils.PhotoMetadataUtils
 
-internal class GifSizeFilter(private val mMinWidth: Int, private val mMinHeight: Int, private val mMaxSize: Int) : Filter() {
+class GifSizeFilter(private val mMinWidth: Int, private val mMinHeight: Int, private val mMaxSize: Int) : Filter() {
   public override fun constraintTypes(): Set<MimeType> {
     return object : HashSet<MimeType>() {
       init {

@@ -19,6 +19,7 @@ package com.zhihu.matisse.internal.model
 import android.content.Context
 import android.database.Cursor
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.loader.app.LoaderManager
 import androidx.loader.app.LoaderManager.LoaderCallbacks
@@ -35,14 +36,19 @@ class AlbumMediaCollection : LoaderCallbacks<Cursor> {
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
     val context = mContext?.get() ?: throw RuntimeException("context is null")
     val album = args?.getParcelable<Album>(ARGS_ALBUM) ?: throw RuntimeException("album is null")
+    Log.i("AlbumMediaCollection", "onCreateLoader-36: 相册id：" + album.id)
     return AlbumMediaLoader.newInstance(context, album, album.isAll && args.getBoolean(ARGS_ENABLE_CAPTURE, false))
   }
 
   override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
+    if (mContext?.get() == null) return
+    Log.i("AlbumMediaCollection", "onLoadFinished-43: 数量：" + data.count)
     mCallbacks?.onAlbumMediaLoad(data)
   }
 
   override fun onLoaderReset(loader: Loader<Cursor>) {
+    Log.i("AlbumMediaCollection", "onLoaderReset-50: 重置")
+    if (mContext?.get() == null) return
     mCallbacks?.onAlbumMediaReset()
   }
 
@@ -57,11 +63,15 @@ class AlbumMediaCollection : LoaderCallbacks<Cursor> {
     mCallbacks = null
   }
 
-  @JvmOverloads
+  fun load(target: Album?){
+    load(target, false)
+  }
+
   fun load(target: Album?, enableCapture: Boolean = false) {
     val args = Bundle()
     args.putParcelable(ARGS_ALBUM, target)
     args.putBoolean(ARGS_ENABLE_CAPTURE, enableCapture)
+    Log.i("AlbumMediaCollection", "load-70: 子相册id：" + target?.id)
     mLoaderManager?.initLoader(LOADER_ID, args, this)
   }
 

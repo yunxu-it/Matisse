@@ -69,7 +69,7 @@ public class PreviewItemFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(item.uri, "video/*");
+                    intent.setDataAndType(item.contentUri, "video/*");
                     try {
                         startActivity(intent);
                     } catch (ActivityNotFoundException e) {
@@ -93,13 +93,13 @@ public class PreviewItemFragment extends Fragment {
             }
         });
 
-        Point size = PhotoMetadataUtils.getBitmapSize(item.getContentUri(), getActivity());
+        Point size = PhotoMetadataUtils.getBitmapSize(item.contentUri, getActivity());
         if (item.isGif()) {
             SelectionSpec.getInstance().imageEngine.loadGifImage(getContext(), size.x, size.y, image,
-                    item.getContentUri());
+                    item.contentUri);
         } else {
             SelectionSpec.getInstance().imageEngine.loadImage(getContext(), size.x, size.y, image,
-                    item.getContentUri());
+                    item.contentUri);
         }
     }
 

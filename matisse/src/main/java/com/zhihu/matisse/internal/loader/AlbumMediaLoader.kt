@@ -28,6 +28,7 @@ import android.provider.MediaStore.Files.FileColumns
 import android.provider.MediaStore.Images.Media
 import android.provider.MediaStore.MediaColumns
 import android.provider.MediaStore.VOLUME_EXTERNAL
+import android.util.Log
 import androidx.loader.content.CursorLoader
 import com.zhihu.matisse.internal.entity.Album
 import com.zhihu.matisse.internal.entity.Item
@@ -46,8 +47,17 @@ class AlbumMediaLoader private constructor(
 ) :
   CursorLoader(context, QUERY_URI, PROJECTION, selection, selectionArgs, ORDER_BY) {
 
+  init {
+    Log.i("AlbumMediaLoader", "搜索语句 " + selection + " " + selectionArgs.contentToString())
+  }
+
+  override fun onLoadInBackground(): Cursor? {
+    return super.onLoadInBackground()
+  }
+
   override fun loadInBackground(): Cursor? {
     val result = super.loadInBackground()
+    Log.i("AlbumMediaLoader", "loadInBackground-52: " + result?.count)
     if (MediaStoreCompat.hasCameraFeature(context)) {
       if (mEnableCapturePhoto || mEnableCaptureVideo) {
         val dummy = MatrixCursor(PROJECTION)
@@ -67,11 +77,7 @@ class AlbumMediaLoader private constructor(
   }
 
   companion object {
-    private val QUERY_URI: Uri = if (VERSION.SDK_INT >= VERSION_CODES.Q) {
-      MediaStore.Files.getContentUri(VOLUME_EXTERNAL)
-    } else {
-      MediaStore.Files.getContentUri("external")
-    };
+    private val QUERY_URI: Uri = MediaStore.Files.getContentUri("external")
 
     private val PROJECTION = arrayOf(FileColumns._ID, MediaColumns.DISPLAY_NAME, MediaColumns.MIME_TYPE, MediaColumns.SIZE, MediaColumns.DURATION)
 

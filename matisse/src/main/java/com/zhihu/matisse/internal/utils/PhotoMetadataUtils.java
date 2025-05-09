@@ -114,7 +114,7 @@ public final class PhotoMetadataUtils {
                 if (cursor == null || !cursor.moveToFirst()) {
                     return null;
                 }
-                return cursor.getString(cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA));
+                return cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.ImageColumns.DATA));
             } finally {
                 if (cursor != null) {
                     cursor.close();
@@ -147,7 +147,7 @@ public final class PhotoMetadataUtils {
 
         ContentResolver resolver = context.getContentResolver();
         for (MimeType type : SelectionSpec.getInstance().mimeTypeSet) {
-            if (type.checkType(resolver, item.getContentUri())) {
+            if (type.checkType(resolver, item.contentUri)) {
                 return true;
             }
         }

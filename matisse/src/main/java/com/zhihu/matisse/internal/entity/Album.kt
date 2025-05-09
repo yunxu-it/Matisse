@@ -14,98 +14,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.entity;
+package com.zhihu.matisse.internal.entity
 
-import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Parcel;
-import android.os.Parcelable;
-import androidx.annotation.NonNull;
-import com.zhihu.matisse.R;
-import com.zhihu.matisse.internal.loader.AlbumLoader;
+import android.content.Context
+import android.database.Cursor
+import android.net.Uri
+import android.os.Parcelable
+import android.util.Log
+import com.zhihu.matisse.R
+import com.zhihu.matisse.internal.loader.AlbumLoader
+import kotlinx.parcelize.Parcelize
+import androidx.core.net.toUri
 
-public class Album implements Parcelable {
-  public static final Creator<Album> CREATOR = new Creator<Album>() {
-    @NonNull @Override public Album createFromParcel(Parcel source) {
-      return new Album(source);
+@Parcelize
+class Album(var id: String, var coverUri: Uri, private var displayName: String, var count: Long) : Parcelable {
+
+  fun addCaptureCount() {
+    count++
+  }
+
+  fun getDisplayName(context: Context): String? {
+    if (isAll) {
+      return context.getString(R.string.album_name_all)
     }
+    return displayName
+  }
 
-    @Override public Album[] newArray(int size) {
-      return new Album[size];
+  val isAll: Boolean
+    get() = ALBUM_ID_ALL == id
+
+  val isEmpty: Boolean
+    get() = count == 0L
+
+  companion object {
+    const val ALBUM_ID_ALL: String = (-1).toString()
+    const val ALBUM_NAME_ALL: String = "All"
+
+    /**
+     * Constructs a new [Album] entity from the [Cursor].
+     * This method is not responsible for managing cursor resource, such as close, iterate, and so on.
+     */
+    @JvmStatic
+    fun valueOf(cursor: Cursor): Album {
+      val albumUri = cursor.getString(cursor.getColumnIndexOrThrow(AlbumLoader.COLUMN_URI))
+      val indexAlbumName = cursor.getColumnIndexOrThrow("bucket_display_name")
+      Log.i("Album", "valueOf-63: " + indexAlbumName + " " + cursor.getString(indexAlbumName))
+      return Album(
+        cursor.getString(cursor.getColumnIndexOrThrow("bucket_id")),
+        (albumUri ?: "").toUri(),
+        cursor.getString(indexAlbumName) ?: "unknown",
+        cursor.getLong(cursor.getColumnIndexOrThrow(AlbumLoader.COLUMN_COUNT))
+      )
     }
-  };
-  public static final String ALBUM_ID_ALL = String.valueOf(-1);
-  public static final String ALBUM_NAME_ALL = "All";
-
-  private final String mId;
-  private final Uri mCoverUri;
-  private final String mDisplayName;
-  private long mCount;
-
-  public Album(String id, Uri coverUri, String albumName, long count) {
-    mId = id;
-    mCoverUri = coverUri;
-    mDisplayName = albumName;
-    mCount = count;
-  }
-
-  private Album(Parcel source) {
-    mId = source.readString();
-    mCoverUri = source.readParcelable(Uri.class.getClassLoader());
-    mDisplayName = source.readString();
-    mCount = source.readLong();
-  }
-
-  /**
-   * Constructs a new {@link Album} entity from the {@link Cursor}.
-   * This method is not responsible for managing cursor resource, such as close, iterate, and so on.
-   */
-  public static Album valueOf(Cursor cursor) {
-    String clumn = cursor.getString(cursor.getColumnIndexOrThrow(AlbumLoader.COLUMN_URI));
-    return new Album(cursor.getString(cursor.getColumnIndexOrThrow("bucket_id")), Uri.parse(clumn != null ? clumn : ""),
-      cursor.getString(cursor.getColumnIndexOrThrow("bucket_display_name")), cursor.getLong(cursor.getColumnIndexOrThrow(AlbumLoader.COLUMN_COUNT)));
-  }
-
-  @Override public int describeContents() {
-    return 0;
-  }
-
-  @Override public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(mId);
-    dest.writeParcelable(mCoverUri, 0);
-    dest.writeString(mDisplayName);
-    dest.writeLong(mCount);
-  }
-
-  public String getId() {
-    return mId;
-  }
-
-  public Uri getCoverUri() {
-    return mCoverUri;
-  }
-
-  public long getCount() {
-    return mCount;
-  }
-
-  public void addCaptureCount() {
-    mCount++;
-  }
-
-  public String getDisplayName(Context context) {
-    if (isAll()) {
-      return context.getString(R.string.album_name_all);
-    }
-    return mDisplayName;
-  }
-
-  public boolean isAll() {
-    return ALBUM_ID_ALL.equals(mId);
-  }
-
-  public boolean isEmpty() {
-    return mCount == 0;
   }
 }

@@ -87,7 +87,7 @@ class SampleActivity : AppCompatActivity() {
     when (this.type) {
       0 -> {
         Matisse.from(this@SampleActivity)
-          .choose(MimeType.ofAll(), false)
+          .choose(MimeType.ofImage(), false)
           .countable(true)
           .capture(true)
           .captureStrategy(CaptureStrategy(true, "com.zhihu.matisse.sample.fileprovider", "test"))

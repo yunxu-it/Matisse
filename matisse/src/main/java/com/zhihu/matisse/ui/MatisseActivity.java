@@ -50,6 +50,7 @@ import com.zhihu.matisse.internal.utils.MediaStoreCompat;
 import com.zhihu.matisse.internal.utils.PathUtils;
 import com.zhihu.matisse.internal.utils.PhotoMetadataUtils;
 import com.zhihu.matisse.internal.utils.SingleMediaScanner;
+import com.zhihu.matisse.module.album.AlbumViewModel;
 import java.util.ArrayList;
 
 /**
@@ -59,6 +60,8 @@ import java.util.ArrayList;
 public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
   implements AlbumCollection.AlbumCallbacks, AdapterView.OnItemSelectedListener, MediaSelectionFragment.SelectionProvider, AlbumMediaAdapter.CheckStateListener,
   AlbumMediaAdapter.OnMediaClickListener, AlbumMediaAdapter.OnPhotoCapture {
+
+  private AlbumViewModel albumViewModel;
 
   public static final String EXTRA_RESULT_SELECTION = "extra_result_selection";
   public static final String EXTRA_RESULT_SELECTION_PATH = "extra_result_selection_path";
@@ -111,6 +114,9 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
       mOriginalEnable = savedInstanceState.getBoolean(CHECK_STATE);
     }
     updateBottomToolbar();
+
+    albumViewModel = getViewModel(AlbumViewModel.class);
+    albumViewModel.loadAlbums();
 
     mAlbumCollection.onCreate(this, this);
     mAlbumCollection.onRestoreInstanceState(savedInstanceState);
@@ -212,8 +218,8 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
         ArrayList<String> selectedPaths = new ArrayList<>();
         if (selected != null) {
           for (Item item : selected) {
-            selectedUris.add(item.getContentUri());
-            selectedPaths.add(PathUtils.getPath(this, item.getContentUri()));
+            selectedUris.add(item.contentUri);
+            selectedPaths.add(PathUtils.getPath(this, item.contentUri));
           }
         }
         result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
