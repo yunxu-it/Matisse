@@ -28,7 +28,7 @@ import com.zhihu.matisse.engine.ImageEngine
  */
 class PicassoEngine : ImageEngine {
   override fun loadThumbnail(context: Context, resize: Int, placeholder: Drawable?, imageView: ImageView, uri: Uri) {
-    Picasso.with(context).load(uri).placeholder(placeholder).resize(resize, resize).centerCrop().into(imageView)
+    Picasso.get().load(uri).apply { if (placeholder != null) placeholder(placeholder) }.resize(resize, resize).centerCrop().into(imageView)
   }
 
   override fun loadGifThumbnail(context: Context, resize: Int, placeholder: Drawable?, imageView: ImageView, uri: Uri) {
@@ -36,7 +36,7 @@ class PicassoEngine : ImageEngine {
   }
 
   override fun loadImage(context: Context, resizeX: Int, resizeY: Int, imageView: ImageView, uri: Uri) {
-    Picasso.with(context).load(uri).resize(resizeX, resizeY).priority(HIGH).centerInside().into(imageView)
+    Picasso.get().load(uri).resize(resizeX, resizeY).priority(HIGH).centerInside().into(imageView)
   }
 
   override fun loadGifImage(context: Context, resizeX: Int, resizeY: Int, imageView: ImageView, uri: Uri) {

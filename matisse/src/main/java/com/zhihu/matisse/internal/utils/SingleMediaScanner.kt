@@ -1,8 +1,9 @@
-package com.zhihu.matisse.internal.utils;
+package com.zhihu.matisse.internal.utils
 
-import android.content.Context;
-import android.media.MediaScannerConnection;
-import android.net.Uri;
+import android.content.Context
+import android.media.MediaScannerConnection
+import android.media.MediaScannerConnection.MediaScannerConnectionClient
+import android.net.Uri
 
 /**
  * @author 工藤
@@ -10,35 +11,26 @@ import android.net.Uri;
  * create at 2018年10月23日12:17:59
  * description:媒体扫描
  */
-public class SingleMediaScanner implements MediaScannerConnection.MediaScannerConnectionClient {
+class SingleMediaScanner(context: Context, private val mPath: String, private val mListener: ScanListener?) : MediaScannerConnectionClient {
+  private val mMsc = MediaScannerConnection(context, this)
 
-    private MediaScannerConnection mMsc;
-    private String mPath;
-    private ScanListener mListener;
+  interface ScanListener {
+    /**
+     * scan finish
+     */
+    fun onScanFinish()
+  }
 
-    public interface ScanListener {
+  init {
+    mMsc.connect()
+  }
 
-        /**
-         * scan finish
-         */
-        void onScanFinish();
-    }
+  override fun onMediaScannerConnected() {
+    mMsc.scanFile(mPath, null)
+  }
 
-    public SingleMediaScanner(Context context, String mPath, ScanListener mListener) {
-        this.mPath = mPath;
-        this.mListener = mListener;
-        this.mMsc = new MediaScannerConnection(context, this);
-        this.mMsc.connect();
-    }
-
-    @Override public void onMediaScannerConnected() {
-        mMsc.scanFile(mPath, null);
-    }
-
-    @Override public void onScanCompleted(String mPath, Uri mUri) {
-        mMsc.disconnect();
-        if (mListener != null) {
-            mListener.onScanFinish();
-        }
-    }
+  override fun onScanCompleted(mPath: String, mUri: Uri) {
+    mMsc.disconnect()
+    mListener?.onScanFinish()
+  }
 }

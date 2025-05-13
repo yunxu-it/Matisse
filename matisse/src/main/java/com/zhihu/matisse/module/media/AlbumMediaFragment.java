@@ -34,7 +34,7 @@ import com.zhihu.matisse.internal.model.SelectedItemCollection;
 import com.zhihu.matisse.internal.ui.widget.MediaGridInset;
 import com.zhihu.matisse.internal.utils.UIUtils;
 
-public class MediaSelectionFragment extends Fragment implements AlbumMediaAdapter.CheckStateListener, AlbumMediaAdapter.OnMediaClickListener {
+public class AlbumMediaFragment extends Fragment implements AlbumMediaAdapter.CheckStateListener, AlbumMediaAdapter.OnMediaClickListener {
 
   public static final String EXTRA_ALBUM = "extra_album";
   private MediaViewModel mediaViewModel;
@@ -45,8 +45,8 @@ public class MediaSelectionFragment extends Fragment implements AlbumMediaAdapte
   private AlbumMediaAdapter.CheckStateListener mCheckStateListener;
   private AlbumMediaAdapter.OnMediaClickListener mOnMediaClickListener;
 
-  public static MediaSelectionFragment newInstance(Album album) {
-    MediaSelectionFragment fragment = new MediaSelectionFragment();
+  public static AlbumMediaFragment newInstance(Album album) {
+    AlbumMediaFragment fragment = new AlbumMediaFragment();
     Bundle args = new Bundle();
     args.putParcelable(EXTRA_ALBUM, album);
     fragment.setArguments(args);
@@ -79,9 +79,9 @@ public class MediaSelectionFragment extends Fragment implements AlbumMediaAdapte
 
   @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    Album album = getArguments().getParcelable(EXTRA_ALBUM);
+    Album album = requireArguments().getParcelable(EXTRA_ALBUM);
 
-    mAdapter = new AlbumMediaAdapter(getContext(), mSelectionProvider.provideSelectedItemCollection(), mRecyclerView);
+    mAdapter = new AlbumMediaAdapter(requireContext(), mSelectionProvider.provideSelectedItemCollection(), mRecyclerView);
     mAdapter.registerCheckStateListener(this);
     mAdapter.registerOnMediaClickListener(this);
     mRecyclerView.setHasFixedSize(true);
@@ -89,22 +89,23 @@ public class MediaSelectionFragment extends Fragment implements AlbumMediaAdapte
     int spanCount;
     SelectionSpec selectionSpec = SelectionSpec.getInstance();
     if (selectionSpec.gridExpectedSize > 0) {
-      spanCount = UIUtils.spanCount(getContext(), selectionSpec.gridExpectedSize);
+      spanCount = UIUtils.spanCount(requireContext(), selectionSpec.gridExpectedSize);
     } else {
       spanCount = selectionSpec.spanCount;
     }
-    mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), spanCount));
+    mRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), spanCount));
 
     int spacing = getResources().getDimensionPixelSize(R.dimen.media_grid_spacing);
     mRecyclerView.addItemDecoration(new MediaGridInset(spanCount, spacing, false));
     mRecyclerView.setAdapter(mAdapter);
 
     mediaViewModel = new MediaViewModel(MediaRepository.Companion.newInstance(requireActivity()));
-    mediaViewModel.loadAlbums(album);
-    mediaViewModel.getMediaList().observe(getViewLifecycleOwner(), cursor -> {
-      Log.i("MediaSelectionFragment", "onActivityCreated-116: ");
-      mAdapter.swapCursor(cursor);
-    });
+    if (album != null) {
+      mediaViewModel.loadAlbums(album, true);
+      mediaViewModel.getMediaList().observe(getViewLifecycleOwner(), cursor -> {
+        mAdapter.swapCursor(cursor);
+      });
+    }
   }
 
   public void refreshMediaGrid() {

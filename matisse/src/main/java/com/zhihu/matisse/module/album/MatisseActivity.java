@@ -39,7 +39,7 @@ import com.zhihu.matisse.internal.entity.SelectionSpec;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
 import com.zhihu.matisse.module.preview.PreviewAlbumActivity;
 import com.zhihu.matisse.module.preview.BasePreviewActivity;
-import com.zhihu.matisse.module.media.MediaSelectionFragment;
+import com.zhihu.matisse.module.media.AlbumMediaFragment;
 import com.zhihu.matisse.module.preview.PreviewSelectedActivity;
 import com.zhihu.matisse.module.media.AlbumMediaAdapter;
 import com.zhihu.matisse.internal.ui.widget.AlbumsSpinner;
@@ -55,7 +55,7 @@ import java.util.ArrayList;
  * and also support media selecting operations.
  */
 public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
-  implements AdapterView.OnItemSelectedListener, MediaSelectionFragment.SelectionProvider, AlbumMediaAdapter.CheckStateListener,
+  implements AdapterView.OnItemSelectedListener, AlbumMediaFragment.SelectionProvider, AlbumMediaAdapter.CheckStateListener,
   AlbumMediaAdapter.OnMediaClickListener, AlbumMediaAdapter.OnPhotoCapture {
 
   private AlbumViewModel albumViewModel;
@@ -225,9 +225,9 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
         finish();
       } else {
         mSelectedCollection.overwrite(selected, collectionType);
-        Fragment mediaSelectionFragment = getSupportFragmentManager().findFragmentByTag(MediaSelectionFragment.class.getSimpleName());
-        if (mediaSelectionFragment instanceof MediaSelectionFragment) {
-          ((MediaSelectionFragment) mediaSelectionFragment).refreshMediaGrid();
+        Fragment mediaSelectionFragment = getSupportFragmentManager().findFragmentByTag(AlbumMediaFragment.class.getSimpleName());
+        if (mediaSelectionFragment instanceof AlbumMediaFragment) {
+          ((AlbumMediaFragment) mediaSelectionFragment).refreshMediaGrid();
         }
         updateBottomToolbar();
       }
@@ -243,11 +243,9 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
       result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selected);
       result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPath);
       setResult(RESULT_OK, result);
-      new SingleMediaScanner(this.getApplicationContext(), path, new SingleMediaScanner.ScanListener() {
-        @Override public void onScanFinish() {
-          Log.i("SingleMediaScanner", "scan finish!");
-        }
-      });
+      if (path != null) {
+        new SingleMediaScanner(this.getApplicationContext(), path, () -> Log.i("SingleMediaScanner", "scan finish!"));
+      }
       finish();
     }
   }
@@ -357,8 +355,8 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
     } else {
       binding.container.setVisibility(View.VISIBLE);
       binding.emptyView.setVisibility(View.GONE);
-      Fragment fragment = MediaSelectionFragment.newInstance(album);
-      getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, MediaSelectionFragment.class.getSimpleName()).commitAllowingStateLoss();
+      Fragment fragment = AlbumMediaFragment.newInstance(album);
+      getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, AlbumMediaFragment.class.getSimpleName()).commitAllowingStateLoss();
     }
   }
 

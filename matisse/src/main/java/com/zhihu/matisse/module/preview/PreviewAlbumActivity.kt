@@ -17,6 +17,7 @@ package com.zhihu.matisse.module.preview
 
 import android.database.Cursor
 import android.os.Bundle
+import android.util.Log
 import com.zhihu.matisse.internal.entity.Album
 import com.zhihu.matisse.internal.entity.Item
 import com.zhihu.matisse.internal.entity.Item.Companion.valueOf

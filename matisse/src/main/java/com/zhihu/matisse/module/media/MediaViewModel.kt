@@ -12,9 +12,12 @@ class MediaViewModel(private val repository: MediaRepository) : AbsViewModel() {
   private val _mediaList = MutableLiveData<Cursor>()
   val mediaList: LiveData<Cursor> get() = _mediaList
 
-  fun loadAlbums(album: Album) {
+  /**
+   * @param needCaptureItem 预览列表不需要显示拍照和录像按钮
+   */
+  fun loadAlbums(album: Album, needCaptureItem: Boolean = false) {
     viewModelScope.launch {
-      _mediaList.value = repository.loadAlbumMediaList(album)
+      _mediaList.value = repository.loadAlbumMediaList(album, needCaptureItem)
     }
   }
 }

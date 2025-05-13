@@ -49,7 +49,7 @@ class MediaRepository(private val context: Context) {
 
   private var coroutineContext: CoroutineContext = Dispatchers.IO
 
-  suspend fun loadAlbumMediaList(album: Album): Cursor? = withContext(coroutineContext) {
+  suspend fun loadAlbumMediaList(album: Album, needCaptureItem: Boolean = false): Cursor? = withContext(coroutineContext) {
     val selectionSpec = SelectionSpec.getInstance()
     val (selection, selectionArgs, enableCapturePhoto, enableCaptureVideo) = buildSelection(selectionSpec, album)
 
@@ -57,7 +57,7 @@ class MediaRepository(private val context: Context) {
     val uri = AlbumMediaCollection.QUERY_URI
 
     val cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, AlbumMediaCollection.ORDER_BY) ?: return@withContext null
-    return@withContext processCursor(cursor, enableCapturePhoto, enableCaptureVideo)
+    return@withContext processCursor(cursor, needCaptureItem && enableCapturePhoto, needCaptureItem && enableCaptureVideo)
   }
 
   private fun buildSelection(selectionSpec: SelectionSpec, album: Album): Param {
