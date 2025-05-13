@@ -24,17 +24,16 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.ListPopupWindow;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.CursorAdapter;
 import android.widget.TextView;
 
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
-import com.zhihu.matisse.internal.utils.Platform;
+import com.zhihu.matisse.module.album.AlbumsAdapter;
 
 public class AlbumsSpinner {
 
   private static final int MAX_SHOWN_COUNT = 6;
-  private CursorAdapter mAdapter;
+  private AlbumsAdapter mAdapter;
   private TextView mSelected;
   private ListPopupWindow mListPopupWindow;
   private AdapterView.OnItemSelectedListener mOnItemSelectedListener;
@@ -47,13 +46,10 @@ public class AlbumsSpinner {
     mListPopupWindow.setHorizontalOffset((int) (16 * density));
     mListPopupWindow.setVerticalOffset((int) (-48 * density));
 
-    mListPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-      @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        AlbumsSpinner.this.onItemSelected(parent.getContext(), position);
-        if (mOnItemSelectedListener != null) {
-          mOnItemSelectedListener.onItemSelected(parent, view, position, id);
-        }
+    mListPopupWindow.setOnItemClickListener((parent, view, position, id) -> {
+      AlbumsSpinner.this.onItemSelected(parent.getContext(), position);
+      if (mOnItemSelectedListener != null) {
+        mOnItemSelectedListener.onItemSelected(parent, view, position, id);
       }
     });
   }
@@ -72,7 +68,7 @@ public class AlbumsSpinner {
     Cursor cursor = mAdapter.getCursor();
     cursor.moveToPosition(position);
     Album album = Album.valueOf(cursor);
-    String displayName = album.getDisplayName(context);
+    String displayName = album.getDisplayName();
     if (mSelected.getVisibility() == View.VISIBLE) {
       mSelected.setText(displayName);
     } else {
@@ -83,7 +79,7 @@ public class AlbumsSpinner {
     }
   }
 
-  public void setAdapter(CursorAdapter adapter) {
+  public void setAdapter(AlbumsAdapter adapter) {
     mListPopupWindow.setAdapter(adapter);
     mAdapter = adapter;
   }

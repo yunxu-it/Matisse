@@ -16,15 +16,15 @@
  */
 package com.zhihu.matisse.internal.entity
 
-import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.os.Parcelable
 import android.util.Log
-import com.zhihu.matisse.R
-import com.zhihu.matisse.internal.loader.AlbumLoader
-import kotlinx.parcelize.Parcelize
 import androidx.core.net.toUri
+import com.zhihu.matisse.R
+import com.zhihu.matisse.internal.utils.ResourceUtil
+import com.zhihu.matisse.module.album.AlbumCollection
+import kotlinx.parcelize.Parcelize
 
 @Parcelize
 class Album(var id: String, var coverUri: Uri, private var displayName: String, var count: Long) : Parcelable {
@@ -33,9 +33,9 @@ class Album(var id: String, var coverUri: Uri, private var displayName: String, 
     count++
   }
 
-  fun getDisplayName(context: Context): String? {
+  fun getDisplayName(): String {
     if (isAll) {
-      return context.getString(R.string.album_name_all)
+      return ResourceUtil.getString(R.string.album_name_all)
     }
     return displayName
   }
@@ -56,14 +56,14 @@ class Album(var id: String, var coverUri: Uri, private var displayName: String, 
      */
     @JvmStatic
     fun valueOf(cursor: Cursor): Album {
-      val albumUri = cursor.getString(cursor.getColumnIndexOrThrow(AlbumLoader.COLUMN_URI))
+      val albumUri = cursor.getString(cursor.getColumnIndexOrThrow(AlbumCollection.COLUMN_URI))
       val indexAlbumName = cursor.getColumnIndexOrThrow("bucket_display_name")
       Log.i("Album", "valueOf-63: " + indexAlbumName + " " + cursor.getString(indexAlbumName))
       return Album(
         cursor.getString(cursor.getColumnIndexOrThrow("bucket_id")),
         (albumUri ?: "").toUri(),
         cursor.getString(indexAlbumName) ?: "unknown",
-        cursor.getLong(cursor.getColumnIndexOrThrow(AlbumLoader.COLUMN_COUNT))
+        cursor.getLong(cursor.getColumnIndexOrThrow(AlbumCollection.COLUMN_COUNT))
       )
     }
   }

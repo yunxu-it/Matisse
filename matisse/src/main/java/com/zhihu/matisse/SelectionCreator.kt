@@ -27,7 +27,7 @@ import com.zhihu.matisse.internal.entity.CaptureStrategy
 import com.zhihu.matisse.internal.entity.SelectionSpec
 import com.zhihu.matisse.listener.OnCheckedListener
 import com.zhihu.matisse.listener.OnSelectedListener
-import com.zhihu.matisse.ui.MatisseActivity
+import com.zhihu.matisse.module.album.MatisseActivity
 import kotlin.annotation.AnnotationRetention.SOURCE
 
 /**

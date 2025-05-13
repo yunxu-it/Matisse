@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.ui;
+package com.zhihu.matisse.module.media;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,18 +30,15 @@ import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
 import com.zhihu.matisse.internal.entity.Item;
 import com.zhihu.matisse.internal.entity.SelectionSpec;
-import com.zhihu.matisse.internal.model.AlbumMediaCollection;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
-import com.zhihu.matisse.internal.ui.adapter.AlbumMediaAdapter;
 import com.zhihu.matisse.internal.ui.widget.MediaGridInset;
 import com.zhihu.matisse.internal.utils.UIUtils;
 
-public class MediaSelectionFragment extends Fragment
-  implements AlbumMediaCollection.AlbumMediaCallbacks, AlbumMediaAdapter.CheckStateListener, AlbumMediaAdapter.OnMediaClickListener {
+public class MediaSelectionFragment extends Fragment implements AlbumMediaAdapter.CheckStateListener, AlbumMediaAdapter.OnMediaClickListener {
 
   public static final String EXTRA_ALBUM = "extra_album";
+  private MediaViewModel mediaViewModel;
 
-  private final AlbumMediaCollection mAlbumMediaCollection = new AlbumMediaCollection();
   private RecyclerView mRecyclerView;
   private AlbumMediaAdapter mAdapter;
   private SelectionProvider mSelectionProvider;
@@ -101,13 +98,13 @@ public class MediaSelectionFragment extends Fragment
     int spacing = getResources().getDimensionPixelSize(R.dimen.media_grid_spacing);
     mRecyclerView.addItemDecoration(new MediaGridInset(spanCount, spacing, false));
     mRecyclerView.setAdapter(mAdapter);
-    mAlbumMediaCollection.onCreate(getActivity(), this);
-    mAlbumMediaCollection.load(album, selectionSpec.capture);
-  }
 
-  @Override public void onDestroyView() {
-    super.onDestroyView();
-    mAlbumMediaCollection.onDestroy();
+    mediaViewModel = new MediaViewModel(MediaRepository.Companion.newInstance(requireActivity()));
+    mediaViewModel.loadAlbums(album);
+    mediaViewModel.getMediaList().observe(getViewLifecycleOwner(), cursor -> {
+      Log.i("MediaSelectionFragment", "onActivityCreated-116: ");
+      mAdapter.swapCursor(cursor);
+    });
   }
 
   public void refreshMediaGrid() {
@@ -116,14 +113,6 @@ public class MediaSelectionFragment extends Fragment
 
   public void refreshSelection() {
     mAdapter.refreshSelection();
-  }
-
-  @Override public void onAlbumMediaLoad(Cursor cursor) {
-    mAdapter.swapCursor(cursor);
-  }
-
-  @Override public void onAlbumMediaReset() {
-    mAdapter.swapCursor(null);
   }
 
   @Override public void onUpdate() {
@@ -135,7 +124,7 @@ public class MediaSelectionFragment extends Fragment
 
   @Override public void onMediaClick(Album album, Item item, int adapterPosition) {
     if (mOnMediaClickListener != null) {
-      mOnMediaClickListener.onMediaClick(getArguments().getParcelable(EXTRA_ALBUM), item, adapterPosition);
+      mOnMediaClickListener.onMediaClick(requireArguments().getParcelable(EXTRA_ALBUM), item, adapterPosition);
     }
   }
 

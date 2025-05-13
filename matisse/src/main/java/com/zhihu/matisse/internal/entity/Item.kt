@@ -19,9 +19,7 @@ package com.zhihu.matisse.internal.entity
 import android.content.ContentUris
 import android.database.Cursor
 import android.net.Uri
-import android.os.Parcel
 import android.os.Parcelable
-import android.os.Parcelable.Creator
 import android.provider.MediaStore.Files
 import android.provider.MediaStore.Files.FileColumns
 import android.provider.MediaStore.Images.Media
@@ -37,19 +35,18 @@ class Item(
   @JvmField
   val size: Long,
   @JvmField
-  var duration: Long
+  var duration: Long,
 ) : Parcelable {
 
-  @JvmField
-  val contentUri: Uri = if (isImage) {
-    Media.EXTERNAL_CONTENT_URI
-  } else if (isVideo) {
-    Video.Media.EXTERNAL_CONTENT_URI
-  } else {
-    Files.getContentUri("external")
-  }.let {
-    ContentUris.withAppendedId(it, id)
-  }
+  fun contentUri(): Uri = ContentUris.withAppendedId(
+    if (isImage) {
+      Media.EXTERNAL_CONTENT_URI
+    } else if (isVideo) {
+      Video.Media.EXTERNAL_CONTENT_URI
+    } else {
+      Files.getContentUri("external")
+    }, id
+  )
 
   val isCapturePhoto: Boolean
     get() = id == ITEM_ID_CAPTURE_PHOTO
@@ -71,7 +68,7 @@ class Item(
       return false
     }
 
-    return id == other.id && (mimeType != null && mimeType == other.mimeType || (mimeType == null && other.mimeType == null)) && (contentUri != null && contentUri == other.contentUri || (contentUri == null && other.contentUri == null)) && size == other.size && duration == other.duration
+    return id == other.id && (mimeType != null && mimeType == other.mimeType || (mimeType == null && other.mimeType == null)) && size == other.size && duration == other.duration
   }
 
   override fun hashCode(): Int {
@@ -80,10 +77,13 @@ class Item(
     if (mimeType != null) {
       result = 31 * result + mimeType.hashCode()
     }
-    result = 31 * result + contentUri.hashCode()
     result = 31 * result + size.hashCode()
     result = 31 * result + duration.hashCode()
     return result
+  }
+
+  override fun toString(): String {
+    return "Item(id=$id, mimeType='$mimeType', size=$size, duration=$duration, contentUri=${contentUri().path})"
   }
 
   companion object {
@@ -101,4 +101,5 @@ class Item(
       )
     }
   }
+
 }

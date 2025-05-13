@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.ui;
+package com.zhihu.matisse.module.album;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -36,21 +36,18 @@ import com.zhihu.matisse.databinding.ActivityMatisseBinding;
 import com.zhihu.matisse.internal.entity.Album;
 import com.zhihu.matisse.internal.entity.Item;
 import com.zhihu.matisse.internal.entity.SelectionSpec;
-import com.zhihu.matisse.internal.model.AlbumCollection;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
-import com.zhihu.matisse.internal.ui.AlbumPreviewActivity;
-import com.zhihu.matisse.internal.ui.BasePreviewActivity;
-import com.zhihu.matisse.internal.ui.MediaSelectionFragment;
-import com.zhihu.matisse.internal.ui.SelectedPreviewActivity;
-import com.zhihu.matisse.internal.ui.adapter.AlbumMediaAdapter;
-import com.zhihu.matisse.internal.ui.adapter.AlbumsAdapter;
+import com.zhihu.matisse.module.preview.PreviewAlbumActivity;
+import com.zhihu.matisse.module.preview.BasePreviewActivity;
+import com.zhihu.matisse.module.media.MediaSelectionFragment;
+import com.zhihu.matisse.module.preview.PreviewSelectedActivity;
+import com.zhihu.matisse.module.media.AlbumMediaAdapter;
 import com.zhihu.matisse.internal.ui.widget.AlbumsSpinner;
 import com.zhihu.matisse.internal.ui.widget.IncapableDialog;
 import com.zhihu.matisse.internal.utils.MediaStoreCompat;
 import com.zhihu.matisse.internal.utils.PathUtils;
 import com.zhihu.matisse.internal.utils.PhotoMetadataUtils;
 import com.zhihu.matisse.internal.utils.SingleMediaScanner;
-import com.zhihu.matisse.module.album.AlbumViewModel;
 import java.util.ArrayList;
 
 /**
@@ -58,7 +55,7 @@ import java.util.ArrayList;
  * and also support media selecting operations.
  */
 public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
-  implements AlbumCollection.AlbumCallbacks, AdapterView.OnItemSelectedListener, MediaSelectionFragment.SelectionProvider, AlbumMediaAdapter.CheckStateListener,
+  implements AdapterView.OnItemSelectedListener, MediaSelectionFragment.SelectionProvider, AlbumMediaAdapter.CheckStateListener,
   AlbumMediaAdapter.OnMediaClickListener, AlbumMediaAdapter.OnPhotoCapture {
 
   private AlbumViewModel albumViewModel;
@@ -115,12 +112,10 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
     }
     updateBottomToolbar();
 
-    albumViewModel = getViewModel(AlbumViewModel.class);
-    albumViewModel.loadAlbums();
-
-    mAlbumCollection.onCreate(this, this);
     mAlbumCollection.onRestoreInstanceState(savedInstanceState);
-    mAlbumCollection.loadAlbums();
+
+    albumViewModel = new AlbumViewModel(AlbumRepository.Companion.newInstance(this));
+    albumViewModel.loadAlbums();
   }
 
   @Override protected void onSaveInstanceState(@NonNull Bundle outState) {
@@ -155,10 +150,12 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
     binding.buttonApply.setOnClickListener(v -> apply());
 
     binding.originalLayout.setOnClickListener(v -> originData());
+
+    albumViewModel.getAlbums().observe(this, albums -> onAlbumLoad(albums));
   }
 
   private void preview() {
-    Intent intent = new Intent(this, SelectedPreviewActivity.class);
+    Intent intent = new Intent(this, PreviewSelectedActivity.class);
     intent.putExtra(BasePreviewActivity.EXTRA_DEFAULT_BUNDLE, mSelectedCollection.getDataWithBundle());
     intent.putExtra(BasePreviewActivity.EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
     startActivityForResult(intent, REQUEST_CODE_PREVIEW);
@@ -193,7 +190,6 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
 
   @Override protected void onDestroy() {
     super.onDestroy();
-    mAlbumCollection.onDestroy();
     mSpec.onCheckedListener = null;
     mSpec.onSelectedListener = null;
   }
@@ -209,7 +205,7 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
 
     if (requestCode == REQUEST_CODE_PREVIEW) {
       Bundle resultBundle = data.getBundleExtra(BasePreviewActivity.EXTRA_RESULT_BUNDLE);
-      ArrayList<Item> selected = resultBundle.getParcelableArrayList(SelectedItemCollection.STATE_SELECTION);
+      ArrayList<Item> selected = resultBundle.getParcelableArrayList(SelectedItemCollection.EXTRA_STATE_SELECTION);
       mOriginalEnable = data.getBooleanExtra(BasePreviewActivity.EXTRA_RESULT_ORIGINAL_ENABLE, false);
       int collectionType = resultBundle.getInt(SelectedItemCollection.STATE_COLLECTION_TYPE, SelectedItemCollection.COLLECTION_UNDEFINED);
       if (data.getBooleanExtra(BasePreviewActivity.EXTRA_RESULT_APPLY, false)) {
@@ -218,8 +214,8 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
         ArrayList<String> selectedPaths = new ArrayList<>();
         if (selected != null) {
           for (Item item : selected) {
-            selectedUris.add(item.contentUri);
-            selectedPaths.add(PathUtils.getPath(this, item.contentUri));
+            selectedUris.add(item.contentUri());
+            selectedPaths.add(PathUtils.getPath(this, item.contentUri()));
           }
         }
         result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
@@ -329,7 +325,7 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
 
   }
 
-  @Override public void onAlbumLoad(final Cursor cursor) {
+  public void onAlbumLoad(final Cursor cursor) {
     mAlbumsAdapter.swapCursor(cursor);
     // select default album.
     Handler handler = new Handler(Looper.getMainLooper());
@@ -349,11 +345,12 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
     });
   }
 
-  @Override public void onAlbumReset() {
-    mAlbumsAdapter.swapCursor(null);
+  public void onAlbumReset() {
+    //mAlbumsAdapter.swapCursor(null);
   }
 
   private void onAlbumSelected(Album album) {
+    Log.i("MatisseActivity", "onAlbumSelected-357: " + album.getDisplayName() + " " + album.getCount() + " " + album.isEmpty());
     if (album.isAll() && album.isEmpty()) {
       binding.container.setVisibility(View.GONE);
       binding.emptyView.setVisibility(View.VISIBLE);
@@ -375,9 +372,9 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
   }
 
   @Override public void onMediaClick(Album album, Item item, int adapterPosition) {
-    Intent intent = new Intent(this, AlbumPreviewActivity.class);
-    intent.putExtra(AlbumPreviewActivity.EXTRA_ALBUM, album);
-    intent.putExtra(AlbumPreviewActivity.EXTRA_ITEM, item);
+    Intent intent = new Intent(this, PreviewAlbumActivity.class);
+    intent.putExtra(PreviewAlbumActivity.EXTRA_ALBUM, album);
+    intent.putExtra(PreviewAlbumActivity.EXTRA_ITEM, item);
     intent.putExtra(BasePreviewActivity.EXTRA_DEFAULT_BUNDLE, mSelectedCollection.getDataWithBundle());
     intent.putExtra(BasePreviewActivity.EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
     startActivityForResult(intent, REQUEST_CODE_PREVIEW);

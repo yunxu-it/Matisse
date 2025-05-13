@@ -35,7 +35,7 @@ import java.util.Set;
 
 @SuppressWarnings("unused") public class SelectedItemCollection {
 
-  public static final String STATE_SELECTION = "state_selection";
+  public static final String EXTRA_STATE_SELECTION = "state_selection";
   public static final String STATE_COLLECTION_TYPE = "state_collection_type";
   /**
    * Empty collection
@@ -65,7 +65,7 @@ import java.util.Set;
     if (bundle == null) {
       mItems = new LinkedHashSet<>();
     } else {
-      List<Item> saved = bundle.getParcelableArrayList(STATE_SELECTION);
+      List<Item> saved = bundle.getParcelableArrayList(EXTRA_STATE_SELECTION);
       mItems = new LinkedHashSet<>(saved);
       mCollectionType = bundle.getInt(STATE_COLLECTION_TYPE, COLLECTION_UNDEFINED);
     }
@@ -76,13 +76,13 @@ import java.util.Set;
   }
 
   public void onSaveInstanceState(Bundle outState) {
-    outState.putParcelableArrayList(STATE_SELECTION, new ArrayList<>(mItems));
+    outState.putParcelableArrayList(EXTRA_STATE_SELECTION, new ArrayList<>(mItems));
     outState.putInt(STATE_COLLECTION_TYPE, mCollectionType);
   }
 
   public Bundle getDataWithBundle() {
     Bundle bundle = new Bundle();
-    bundle.putParcelableArrayList(STATE_SELECTION, new ArrayList<>(mItems));
+    bundle.putParcelableArrayList(EXTRA_STATE_SELECTION, new ArrayList<>(mItems));
     bundle.putInt(STATE_COLLECTION_TYPE, mCollectionType);
     return bundle;
   }
@@ -143,7 +143,7 @@ import java.util.Set;
   public List<Uri> asListOfUri() {
     List<Uri> uris = new ArrayList<>();
     for (Item item : mItems) {
-      uris.add(item.contentUri);
+      uris.add(item.contentUri());
     }
     return uris;
   }
@@ -151,7 +151,7 @@ import java.util.Set;
   public List<String> asListOfString() {
     List<String> paths = new ArrayList<>();
     for (Item item : mItems) {
-      paths.add(PathUtils.getPath(mContext, item.contentUri));
+      paths.add(PathUtils.getPath(mContext, item.contentUri()));
     }
     return paths;
   }

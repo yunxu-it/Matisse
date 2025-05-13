@@ -42,7 +42,7 @@ abstract class Filter {
    */
   protected fun needFiltering(context: Context, item: Item): Boolean {
     for (type in constraintTypes()) {
-      if (type.checkType(context.contentResolver, item.contentUri)) {
+      if (type.checkType(context.contentResolver, item.contentUri())) {
         return true
       }
     }

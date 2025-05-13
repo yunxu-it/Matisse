@@ -48,13 +48,13 @@
 
   <application android:requestLegacyExternalStorage="true">
     <activity
-      android:name="com.zhihu.matisse.ui.MatisseActivity"
+      android:name="com.zhihu.matisse.module.album.MatisseActivity"
       android:exported="true" />
     <activity
-      android:name="com.zhihu.matisse.internal.ui.AlbumPreviewActivity"
+      android:name="com.zhihu.matisse.module.preview.PreviewAlbumActivity"
       android:exported="false" />
     <activity
-      android:name="com.zhihu.matisse.internal.ui.SelectedPreviewActivity"
+      android:name="com.zhihu.matisse.module.preview.PreviewSelectedActivity"
       android:exported="false" />
   </application>
 </manifest>

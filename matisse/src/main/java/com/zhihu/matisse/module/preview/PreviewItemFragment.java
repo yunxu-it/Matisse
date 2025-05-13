@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.ui;
+package com.zhihu.matisse.module.preview;
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -69,7 +69,7 @@ public class PreviewItemFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(item.contentUri, "video/*");
+                    intent.setDataAndType(item.contentUri(), "video/*");
                     try {
                         startActivity(intent);
                     } catch (ActivityNotFoundException e) {
@@ -93,13 +93,13 @@ public class PreviewItemFragment extends Fragment {
             }
         });
 
-        Point size = PhotoMetadataUtils.getBitmapSize(item.contentUri, getActivity());
+        Point size = PhotoMetadataUtils.getBitmapSize(item.contentUri(), getActivity());
         if (item.isGif()) {
             SelectionSpec.getInstance().imageEngine.loadGifImage(getContext(), size.x, size.y, image,
-                    item.contentUri);
+                    item.contentUri());
         } else {
             SelectionSpec.getInstance().imageEngine.loadImage(getContext(), size.x, size.y, image,
-                    item.contentUri);
+                    item.contentUri());
         }
     }
 

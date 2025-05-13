@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.ui.adapter;
+package com.zhihu.matisse.module.preview;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -21,7 +21,6 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import android.view.ViewGroup;
 
 import com.zhihu.matisse.internal.entity.Item;
-import com.zhihu.matisse.internal.ui.PreviewItemFragment;
 
 import java.util.ArrayList;
 import java.util.List;

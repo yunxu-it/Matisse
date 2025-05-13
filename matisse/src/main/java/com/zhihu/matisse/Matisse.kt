@@ -19,17 +19,22 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import androidx.fragment.app.Fragment
-import com.zhihu.matisse.ui.MatisseActivity
+import com.zhihu.matisse.internal.utils.ResourceUtil
+import com.zhihu.matisse.module.album.MatisseActivity
 import java.lang.ref.WeakReference
 
 /**
  * Entry for Matisse's media selection.
  */
-class Matisse private constructor(activity: Activity?, fragment: Fragment? = null) {
+class Matisse private constructor(activity: Activity, fragment: Fragment? = null) {
   private val mContext = WeakReference(activity)
   private val mFragment = WeakReference(fragment)
 
-  private constructor(fragment: Fragment) : this(fragment.activity, fragment)
+  init {
+    ResourceUtil.init(activity.application)
+  }
+
+  private constructor(fragment: Fragment) : this(fragment.requireActivity(), fragment)
 
   /**
    * MIME types the selection constrains on.

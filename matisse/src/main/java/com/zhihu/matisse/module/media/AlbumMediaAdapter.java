@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.ui.adapter;
+package com.zhihu.matisse.module.media;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +34,7 @@ import com.zhihu.matisse.internal.entity.IncapableCause;
 import com.zhihu.matisse.internal.entity.Item;
 import com.zhihu.matisse.internal.entity.SelectionSpec;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
+import com.zhihu.matisse.internal.ui.adapter.RecyclerViewCursorAdapter;
 import com.zhihu.matisse.internal.ui.widget.CheckView;
 import com.zhihu.matisse.internal.ui.widget.MediaGrid;
 
@@ -111,6 +113,7 @@ public class AlbumMediaAdapter extends RecyclerViewCursorAdapter<RecyclerView.Vi
       captureViewHolder.mHint.setCompoundDrawables(drawables[0], drawables[1], drawables[2], drawables[3]);
     } else if (holder instanceof MediaViewHolder mediaViewHolder) {
       final Item item = Item.valueOf(cursor);
+      Log.i("AlbumMediaAdapter", "onBindViewHolder-114: " + item.toString());
       mediaViewHolder.mMediaGrid.preBindMedia(
         new MediaGrid.PreBindInfo(getImageResize(mediaViewHolder.mMediaGrid.getContext()), mPlaceholder, mSelectionSpec.countable, holder));
       mediaViewHolder.mMediaGrid.bindMedia(item);

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.internal.ui.adapter
+package com.zhihu.matisse.module.album
 
 import android.content.Context
 import android.database.Cursor
@@ -49,7 +49,7 @@ class AlbumsAdapter : CursorAdapter {
 
   override fun bindView(view: View, context: Context, cursor: Cursor) {
     val album = Album.valueOf(cursor)
-    (view.findViewById<View>(R.id.album_name) as TextView).text = album.getDisplayName(context)
+    (view.findViewById<View>(R.id.album_name) as TextView).text = album.getDisplayName()
     (view.findViewById<View>(R.id.album_media_count) as TextView).text = album.count.toString()
 
     // do not need to load animated Gif

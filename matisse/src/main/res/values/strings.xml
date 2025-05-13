@@ -18,6 +18,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="MissingTranslation">
     <string name="album_name_all">All Media</string>
+    <string name="no_data_cc">No data</string>
 
     <string name="button_preview">Preview</string>
     <string name="button_apply_default">Apply</string>
