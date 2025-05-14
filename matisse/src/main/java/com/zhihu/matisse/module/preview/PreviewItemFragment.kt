@@ -13,101 +13,95 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.module.preview;
+package com.zhihu.matisse.module.preview
 
-import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Point;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import com.zhihu.matisse.R;
-import com.zhihu.matisse.internal.entity.Item;
-import com.zhihu.matisse.internal.entity.SelectionSpec;
-import com.zhihu.matisse.internal.utils.PhotoMetadataUtils;
-import com.zhihu.matisse.listener.OnFragmentInteractionListener;
-import it.sephiroth.android.library.imagezoom.ImageViewTouch;
-import it.sephiroth.android.library.imagezoom.ImageViewTouchBase;
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import android.widget.Toast
+import com.zhihu.matisse.R
+import com.zhihu.matisse.base.BaseDBFragment
+import com.zhihu.matisse.databinding.FragmentPreviewItemBinding
+import com.zhihu.matisse.internal.entity.Item
+import com.zhihu.matisse.internal.entity.SelectionSpec.Companion.getInstance
+import com.zhihu.matisse.internal.utils.PhotoMetadataUtils
+import com.zhihu.matisse.listener.OnFragmentInteractionListener
+import it.sephiroth.android.library.imagezoom.ImageViewTouch
+import it.sephiroth.android.library.imagezoom.ImageViewTouchBase.DisplayType.FIT_TO_SCREEN
 
-public class PreviewItemFragment extends Fragment {
+class PreviewItemFragment : BaseDBFragment<FragmentPreviewItemBinding>() {
+  private var mListener: OnFragmentInteractionListener? = null
 
-  private static final String ARGS_ITEM = "args_item";
-  private OnFragmentInteractionListener mListener;
-
-  public static PreviewItemFragment newInstance(Item item) {
-    PreviewItemFragment fragment = new PreviewItemFragment();
-    Bundle bundle = new Bundle();
-    bundle.putParcelable(ARGS_ITEM, item);
-    fragment.setArguments(bundle);
-    return fragment;
+  override fun initLayoutId(): Int {
+    return R.layout.fragment_preview_item
   }
 
-  @Override public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_preview_item, container, false);
+  override fun initView() {
   }
 
-  @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    final Item item = getArguments().getParcelable(ARGS_ITEM);
-    if (item == null) {
-      return;
-    }
-    View videoPlayButton = view.findViewById(R.id.video_play_button);
-    if (item.isVideo()) {
-      videoPlayButton.setVisibility(View.VISIBLE);
-      videoPlayButton.setOnClickListener(v -> {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(item.contentUri(), "video/*");
+  override fun initData() {
+    super.initData()
+    val item = requireArguments().getParcelable<Item>(ARGS_ITEM) ?: return
+    if (item.isVideo) {
+      binding.videoPlayButton.visibility = View.VISIBLE
+      binding.videoPlayButton.setOnClickListener {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(item.contentUri(), "video/*")
         try {
-          startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-          Toast.makeText(getContext(), R.string.error_no_video_activity, Toast.LENGTH_SHORT).show();
+          startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+          Toast.makeText(context, R.string.error_no_video_activity, Toast.LENGTH_SHORT).show()
         }
-      });
-    } else {
-      videoPlayButton.setVisibility(View.GONE);
-    }
-
-    ImageViewTouch image = (ImageViewTouch) view.findViewById(R.id.image_view);
-    image.setDisplayType(ImageViewTouchBase.DisplayType.FIT_TO_SCREEN);
-
-    image.setSingleTapListener(() -> {
-      if (mListener != null) {
-        mListener.onClick();
       }
-    });
-
-    Point size = PhotoMetadataUtils.getBitmapSize(item.contentUri(), getActivity());
-    if (item.isGif()) {
-      SelectionSpec.getInstance().imageEngine.loadGifImage(getContext(), size.x, size.y, image, item.contentUri());
     } else {
-      SelectionSpec.getInstance().imageEngine.loadImage(getContext(), size.x, size.y, image, item.contentUri());
+      binding.videoPlayButton.visibility = View.GONE
     }
-  }
 
-  public void resetView() {
-    if (getView() != null) {
-      ((ImageViewTouch) getView().findViewById(R.id.image_view)).resetMatrix();
+    binding.imageView.displayType = FIT_TO_SCREEN
+    binding.imageView.setSingleTapListener {
+      if (mListener != null) {
+        mListener!!.onClick()
+      }
     }
-  }
 
-  @Override public void onAttach(Context context) {
-    super.onAttach(context);
-    if (context instanceof OnFragmentInteractionListener) {
-      mListener = (OnFragmentInteractionListener) context;
+    val size = PhotoMetadataUtils.getBitmapSize(item.contentUri(), activity)
+    if (item.isGif) {
+      getInstance().imageEngine.loadGifImage(requireContext(), size.x, size.y, binding.imageView, item.contentUri())
     } else {
-      throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
+      getInstance().imageEngine.loadImage(requireContext(), size.x, size.y, binding.imageView, item.contentUri())
     }
   }
 
-  @Override public void onDetach() {
-    super.onDetach();
-    mListener = null;
+  fun resetView() {
+    binding.imageView.resetMatrix()
+  }
+
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+    if (context is OnFragmentInteractionListener) {
+      mListener = context
+    } else {
+      throw RuntimeException("$context must implement OnFragmentInteractionListener")
+    }
+  }
+
+  override fun onDetach() {
+    super.onDetach()
+    mListener = null
+  }
+
+  companion object {
+    private const val ARGS_ITEM = "args_item"
+
+    @JvmStatic
+    fun newInstance(item: Item?): PreviewItemFragment {
+      val fragment = PreviewItemFragment()
+      val bundle = Bundle()
+      bundle.putParcelable(ARGS_ITEM, item)
+      fragment.arguments = bundle
+      return fragment
+    }
   }
 }

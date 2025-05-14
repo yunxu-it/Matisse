@@ -30,6 +30,7 @@ import android.widget.AdapterView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.base.BaseDBActivity;
 import com.zhihu.matisse.databinding.ActivityMatisseBinding;
@@ -114,7 +115,7 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
 
     mAlbumCollection.onRestoreInstanceState(savedInstanceState);
 
-    albumViewModel = new AlbumViewModel(AlbumRepository.Companion.newInstance(this));
+    albumViewModel = new ViewModelProvider(this, new AlbumViewModelFactory(AlbumRepository.Companion.newInstance(this))).get(AlbumViewModel.class);
     albumViewModel.loadAlbums();
   }
 

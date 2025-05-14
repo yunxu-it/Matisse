@@ -13,123 +13,128 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zhihu.matisse.module.media;
+package com.zhihu.matisse.module.media
 
-import android.content.Context;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.zhihu.matisse.R;
-import com.zhihu.matisse.internal.entity.Album;
-import com.zhihu.matisse.internal.entity.Item;
-import com.zhihu.matisse.internal.entity.SelectionSpec;
-import com.zhihu.matisse.internal.model.SelectedItemCollection;
-import com.zhihu.matisse.internal.ui.widget.MediaGridInset;
-import com.zhihu.matisse.internal.utils.UIUtils;
+import android.content.Context
+import android.database.Cursor
+import android.os.Bundle
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
+import com.zhihu.matisse.R
+import com.zhihu.matisse.base.BaseDBFragment
+import com.zhihu.matisse.databinding.FragmentMediaSelectionBinding
+import com.zhihu.matisse.internal.entity.Album
+import com.zhihu.matisse.internal.entity.Item
+import com.zhihu.matisse.internal.entity.SelectionSpec.Companion.getInstance
+import com.zhihu.matisse.internal.model.SelectedItemCollection
+import com.zhihu.matisse.internal.ui.widget.MediaGridInset
+import com.zhihu.matisse.internal.utils.UIUtils.spanCount
+import com.zhihu.matisse.module.media.AlbumMediaAdapter.CheckStateListener
+import com.zhihu.matisse.module.media.AlbumMediaAdapter.OnMediaClickListener
+import com.zhihu.matisse.module.media.MediaRepository.Companion.newInstance
 
-public class AlbumMediaFragment extends Fragment implements AlbumMediaAdapter.CheckStateListener, AlbumMediaAdapter.OnMediaClickListener {
-
-  public static final String EXTRA_ALBUM = "extra_album";
-  private MediaViewModel mediaViewModel;
-
-  private RecyclerView mRecyclerView;
-  private AlbumMediaAdapter mAdapter;
-  private SelectionProvider mSelectionProvider;
-  private AlbumMediaAdapter.CheckStateListener mCheckStateListener;
-  private AlbumMediaAdapter.OnMediaClickListener mOnMediaClickListener;
-
-  public static AlbumMediaFragment newInstance(Album album) {
-    AlbumMediaFragment fragment = new AlbumMediaFragment();
-    Bundle args = new Bundle();
-    args.putParcelable(EXTRA_ALBUM, album);
-    fragment.setArguments(args);
-    return fragment;
+class AlbumMediaFragment : BaseDBFragment<FragmentMediaSelectionBinding>(), CheckStateListener, OnMediaClickListener {
+  private val mediaViewModel: MediaViewModel by lazy {
+    ViewModelProvider(
+      this, MediaViewModelFactory(newInstance(requireContext()))
+    )[MediaViewModel::class.java]
   }
 
-  @Override public void onAttach(@NonNull Context context) {
-    super.onAttach(context);
-    if (context instanceof SelectionProvider) {
-      mSelectionProvider = (SelectionProvider) context;
+  private lateinit var mAdapter: AlbumMediaAdapter
+
+  private var mSelectionProvider: SelectionProvider? = null
+  private var mCheckStateListener: CheckStateListener? = null
+  private var parentMediaClickListener: OnMediaClickListener? = null
+
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+    if (context is SelectionProvider) {
+      mSelectionProvider = context
     } else {
-      throw new IllegalStateException("Context must implement SelectionProvider.");
+      throw IllegalStateException("Context must implement SelectionProvider.")
     }
-    if (context instanceof AlbumMediaAdapter.CheckStateListener) {
-      mCheckStateListener = (AlbumMediaAdapter.CheckStateListener) context;
+    if (context is CheckStateListener) {
+      mCheckStateListener = context
     }
-    if (context instanceof AlbumMediaAdapter.OnMediaClickListener) {
-      mOnMediaClickListener = (AlbumMediaAdapter.OnMediaClickListener) context;
+    if (context is OnMediaClickListener) {
+      parentMediaClickListener = context
     }
   }
 
-  @Nullable @Override public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_media_selection, container, false);
+  override fun initLayoutId(): Int {
+    return R.layout.fragment_media_selection
   }
 
-  @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    mRecyclerView = view.findViewById(R.id.recyclerview);
-  }
+  override fun initView() {
+    binding.recyclerview.setHasFixedSize(true)
+    mAdapter = AlbumMediaAdapter(requireContext(), mSelectionProvider!!.provideSelectedItemCollection(), binding.recyclerview)
+    mAdapter.registerCheckStateListener(this)
+    mAdapter.registerOnMediaClickListener(this)
 
-  @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-    Album album = requireArguments().getParcelable(EXTRA_ALBUM);
-
-    mAdapter = new AlbumMediaAdapter(requireContext(), mSelectionProvider.provideSelectedItemCollection(), mRecyclerView);
-    mAdapter.registerCheckStateListener(this);
-    mAdapter.registerOnMediaClickListener(this);
-    mRecyclerView.setHasFixedSize(true);
-
-    int spanCount;
-    SelectionSpec selectionSpec = SelectionSpec.getInstance();
-    if (selectionSpec.gridExpectedSize > 0) {
-      spanCount = UIUtils.spanCount(requireContext(), selectionSpec.gridExpectedSize);
+    val selectionSpec = getInstance()
+    val spanCount: Int = if (selectionSpec.gridExpectedSize > 0) {
+      spanCount(requireContext(), selectionSpec.gridExpectedSize)
     } else {
-      spanCount = selectionSpec.spanCount;
+      selectionSpec.spanCount
     }
-    mRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), spanCount));
 
-    int spacing = getResources().getDimensionPixelSize(R.dimen.media_grid_spacing);
-    mRecyclerView.addItemDecoration(new MediaGridInset(spanCount, spacing, false));
-    mRecyclerView.setAdapter(mAdapter);
+    binding.recyclerview.layoutManager = GridLayoutManager(requireContext(), spanCount)
 
-    mediaViewModel = new MediaViewModel(MediaRepository.Companion.newInstance(requireActivity()));
+    val spacing = resources.getDimensionPixelSize(R.dimen.media_grid_spacing)
+    binding.recyclerview.addItemDecoration(MediaGridInset(spanCount, spacing, false))
+    binding.recyclerview.adapter = mAdapter
+  }
+
+  override fun initData() {
+    super.initData()
+    val album = requireArguments().getParcelable<Album>(EXTRA_ALBUM)
+
     if (album != null) {
-      mediaViewModel.loadAlbums(album, true);
-      mediaViewModel.getMediaList().observe(getViewLifecycleOwner(), cursor -> {
-        mAdapter.swapCursor(cursor);
-      });
+      mediaViewModel.loadAlbums(album, true)
+      mediaViewModel.mediaList.observe(viewLifecycleOwner) { cursor: Cursor? ->
+        mAdapter.swapCursor(cursor)
+      }
     }
   }
 
-  public void refreshMediaGrid() {
-    mAdapter.notifyDataSetChanged();
+  fun refreshMediaGrid() {
+    mAdapter.notifyDataSetChanged()
   }
 
-  public void refreshSelection() {
-    mAdapter.refreshSelection();
+  fun refreshSelection() {
+    mAdapter.refreshSelection()
   }
 
-  @Override public void onUpdate() {
-    // notify outer Activity that check state changed
+  override fun onDestroyView() {
+    super.onDestroyView()
+    mAdapter.swapCursor(null)
+  }
+
+  override fun onUpdate() { // notify outer Activity that check state changed
     if (mCheckStateListener != null) {
-      mCheckStateListener.onUpdate();
+      mCheckStateListener!!.onUpdate()
     }
   }
 
-  @Override public void onMediaClick(Album album, Item item, int adapterPosition) {
-    if (mOnMediaClickListener != null) {
-      mOnMediaClickListener.onMediaClick(requireArguments().getParcelable(EXTRA_ALBUM), item, adapterPosition);
-    }
+  override fun onMediaClick(album: Album?, item: Item, adapterPosition: Int) {
+    val albumData = requireArguments().getParcelable<Album>(EXTRA_ALBUM)
+    parentMediaClickListener?.onMediaClick(albumData, item, adapterPosition)
   }
 
-  public interface SelectionProvider {
-    SelectedItemCollection provideSelectedItemCollection();
+  interface SelectionProvider {
+    fun provideSelectedItemCollection(): SelectedItemCollection?
+  }
+
+  companion object {
+    const val EXTRA_ALBUM: String = "extra_album"
+
+    @JvmStatic
+    fun newInstance(album: Album): AlbumMediaFragment {
+      val fragment = AlbumMediaFragment()
+      val args = Bundle()
+      args.putParcelable(EXTRA_ALBUM, album)
+      fragment.arguments = args
+      return fragment
+    }
   }
 }

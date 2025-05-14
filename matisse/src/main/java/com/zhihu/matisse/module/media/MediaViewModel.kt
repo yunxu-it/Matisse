@@ -3,6 +3,8 @@ package com.zhihu.matisse.module.media
 import android.database.Cursor
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.zhihu.matisse.base.AbsViewModel
 import com.zhihu.matisse.internal.entity.Album
@@ -19,5 +21,14 @@ class MediaViewModel(private val repository: MediaRepository) : AbsViewModel() {
     viewModelScope.launch {
       _mediaList.value = repository.loadAlbumMediaList(album, needCaptureItem)
     }
+  }
+}
+
+class MediaViewModelFactory(private val repository: MediaRepository) : ViewModelProvider.Factory {
+  override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    if (modelClass.isAssignableFrom(MediaViewModel::class.java)) {
+      return MediaViewModel(repository) as T
+    }
+    throw IllegalArgumentException("Unknown ViewModel class")
   }
 }

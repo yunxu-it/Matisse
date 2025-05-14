@@ -20,6 +20,9 @@ import com.zhihu.matisse.internal.entity.Item
 import com.zhihu.matisse.internal.entity.SelectionSpec.Companion.getInstance
 import com.zhihu.matisse.internal.model.SelectedItemCollection
 
+/**
+ * 只包含已选择列表的预览界面
+ */
 class PreviewSelectedActivity : BasePreviewActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

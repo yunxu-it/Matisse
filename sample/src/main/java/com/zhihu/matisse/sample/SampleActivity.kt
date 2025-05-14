@@ -106,7 +106,6 @@ class SampleActivity : AppCompatActivity() {
             }
           })
           .showSingleMediaType(true)
-          .originalEnable(true)
           .maxOriginalSize(10)
           .autoHideToolbarOnSingleTap(true)
           .setOnCheckedListener(object : OnCheckedListener {

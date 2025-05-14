@@ -27,8 +27,8 @@ import java.util.List;
 
 public class PreviewPagerAdapter extends FragmentPagerAdapter {
 
-    private ArrayList<Item> mItems = new ArrayList<>();
-    private OnPrimaryItemSetListener mListener;
+    private final ArrayList<Item> mItems = new ArrayList<>();
+    private final OnPrimaryItemSetListener mListener;
 
     public PreviewPagerAdapter(FragmentManager manager, OnPrimaryItemSetListener listener) {
         super(manager);

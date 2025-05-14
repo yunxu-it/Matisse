@@ -67,7 +67,8 @@ class PreviewAlbumActivity : BasePreviewActivity() {
     while (cursor.moveToNext()) {
       items.add(valueOf(cursor))
     }
-    //        cursor.close();
+    cursor.close()
+
     if (items.isEmpty()) {
       return
     }
