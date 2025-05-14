@@ -7,6 +7,7 @@ import android.database.MergeCursor
 import android.provider.MediaStore.Files.FileColumns
 import com.zhihu.matisse.internal.entity.Album
 import com.zhihu.matisse.internal.entity.Item
+import com.zhihu.matisse.internal.entity.QueryScripts
 import com.zhihu.matisse.internal.entity.SelectionSpec
 import com.zhihu.matisse.internal.utils.MediaStoreCompat
 import kotlinx.coroutines.Dispatchers
@@ -15,10 +16,7 @@ import kotlin.coroutines.CoroutineContext
 
 class MediaRepository(private val context: Context) {
   data class Param(
-    val selection: String,
-    val selectionArgs: Array<String>,
-    val enableCapturePhoto: Boolean,
-    val enableCaptureVideo: Boolean
+    val selection: String, val selectionArgs: Array<String>, val enableCapturePhoto: Boolean, val enableCaptureVideo: Boolean
   ) {
     override fun equals(other: Any?): Boolean {
       if (this === other) return true
@@ -53,10 +51,8 @@ class MediaRepository(private val context: Context) {
     val selectionSpec = SelectionSpec.getInstance()
     val (selection, selectionArgs, enableCapturePhoto, enableCaptureVideo) = buildSelection(selectionSpec, album)
 
-    val projection = AlbumMediaCollection.PROJECTION
-    val uri = AlbumMediaCollection.QUERY_URI
-
-    val cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, AlbumMediaCollection.ORDER_BY) ?: return@withContext null
+    val cursor = context.contentResolver.query(QueryScripts.QUERY_URI, QueryScripts.PROJECTION_MEDIA, selection, selectionArgs, QueryScripts.ORDER_BY)
+      ?: return@withContext null
     return@withContext processCursor(cursor, needCaptureItem && enableCapturePhoto, needCaptureItem && enableCaptureVideo)
   }
 
@@ -68,45 +64,37 @@ class MediaRepository(private val context: Context) {
 
     if (album.isAll) {
       if (selectionSpec.onlyShowGif()) {
-        selection = AlbumMediaCollection.SELECTION_ALL_FOR_GIF
-        selectionArgs = AlbumMediaCollection.getSelectionArgsForGifType(
-          FileColumns.MEDIA_TYPE_IMAGE
-        )
+        selection = QueryScripts.selectionMediaForSingleMediaGifType()
+        selectionArgs = QueryScripts.selectionArgsForSingleMediaGifType()
       } else if (selectionSpec.onlyShowImages()) {
-        selection = AlbumMediaCollection.SELECTION_ALL_FOR_SINGLE_MEDIA_TYPE
-        selectionArgs = AlbumMediaCollection.getSelectionArgsForSingleMediaType(
-          FileColumns.MEDIA_TYPE_IMAGE
-        )
+        selection = QueryScripts.selectionMediaForSingleMediaType()
+        selectionArgs = QueryScripts.selectionArgsForSingleMediaType(FileColumns.MEDIA_TYPE_IMAGE)
       } else if (selectionSpec.onlyShowVideos()) {
-        selection = AlbumMediaCollection.SELECTION_ALL_FOR_SINGLE_MEDIA_TYPE
-        selectionArgs = AlbumMediaCollection.getSelectionArgsForSingleMediaType(
-          FileColumns.MEDIA_TYPE_VIDEO
-        )
+        selection = QueryScripts.selectionMediaForSingleMediaType()
+        selectionArgs = QueryScripts.selectionArgsForSingleMediaType(FileColumns.MEDIA_TYPE_VIDEO)
       } else {
-        selection = AlbumMediaCollection.SELECTION_ALL
-        selectionArgs = AlbumMediaCollection.SELECTION_ALL_ARGS
+        selection = QueryScripts.selectionMediaAll()
+        selectionArgs = QueryScripts.argsForImageAndVideo()
       }
       enableCapturePhoto = selectionSpec.showImages()
       enableCaptureVideo = selectionSpec.showVideos()
     } else {
       if (selectionSpec.onlyShowGif()) {
-        selection = AlbumMediaCollection.SELECTION_ALBUM_FOR_GIF
-        selectionArgs = AlbumMediaCollection.getSelectionAlbumArgsForGifType(
-          FileColumns.MEDIA_TYPE_IMAGE, album.id
-        )
+        selection = QueryScripts.SELECTION_ALBUM_FOR_GIF
+        selectionArgs = QueryScripts.selectionAlbumArgsForGifType(album.id)
       } else if (selectionSpec.onlyShowImages()) {
-        selection = AlbumMediaCollection.SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE
-        selectionArgs = AlbumMediaCollection.getSelectionAlbumArgsForSingleMediaType(
+        selection = QueryScripts.SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE
+        selectionArgs = QueryScripts.getSelectionAlbumArgsForSingleMediaType(
           FileColumns.MEDIA_TYPE_IMAGE, album.id
         )
       } else if (selectionSpec.onlyShowVideos()) {
-        selection = AlbumMediaCollection.SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE
-        selectionArgs = AlbumMediaCollection.getSelectionAlbumArgsForSingleMediaType(
+        selection = QueryScripts.SELECTION_ALBUM_FOR_SINGLE_MEDIA_TYPE
+        selectionArgs = QueryScripts.getSelectionAlbumArgsForSingleMediaType(
           FileColumns.MEDIA_TYPE_VIDEO, album.id
         )
       } else {
-        selection = AlbumMediaCollection.SELECTION_ALBUM
-        selectionArgs = AlbumMediaCollection.getSelectionAlbumArgs(album.id)
+        selection = QueryScripts.SELECTION_ALL_BY_ALBUM
+        selectionArgs = QueryScripts.selectionAllByAlbumArgs(album.id)
       }
     }
     return Param(selection, selectionArgs, enableCapturePhoto, enableCaptureVideo)
@@ -115,7 +103,7 @@ class MediaRepository(private val context: Context) {
   private fun processCursor(cursor: Cursor, enableCapturePhoto: Boolean, enableCaptureVideo: Boolean): Cursor {
     if (MediaStoreCompat.hasCameraFeature(context)) {
       if (enableCapturePhoto || enableCaptureVideo) {
-        val dummy = MatrixCursor(AlbumMediaCollection.PROJECTION)
+        val dummy = MatrixCursor(QueryScripts.PROJECTION_MEDIA)
         if (enableCapturePhoto) {
           dummy.addRow(arrayOf<Any>(Item.ITEM_ID_CAPTURE_PHOTO, Item.ITEM_DISPLAY_NAME_CAPTURE, "", 0, 0))
         }

@@ -5,15 +5,11 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.database.MergeCursor
 import android.net.Uri
-import android.provider.MediaStore
 import android.provider.MediaStore.Files.FileColumns
 import android.provider.MediaStore.MediaColumns
 import com.zhihu.matisse.internal.entity.Album
+import com.zhihu.matisse.internal.entity.QueryScripts
 import com.zhihu.matisse.internal.entity.SelectionSpec
-import com.zhihu.matisse.internal.utils.Platform.beforeAndroidTen
-import com.zhihu.matisse.module.album.AlbumCollection.Companion.COLUMNS
-import com.zhihu.matisse.module.album.AlbumCollection.Companion.COLUMN_BUCKET_DISPLAY_NAME
-import com.zhihu.matisse.module.album.AlbumCollection.Companion.COLUMN_BUCKET_ID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
@@ -31,33 +27,25 @@ class AlbumRepository(private val context: Context) {
     val selectionSpec = SelectionSpec.getInstance()
     val (selection, selectionArgs) = buildSelection(selectionSpec)
 
-    val projection = if (beforeAndroidTen()) AlbumCollection.PROJECTION else AlbumCollection.PROJECTION_29
-    val uri = MediaStore.Files.getContentUri("external")
-
-    val cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, AlbumCollection.BUCKET_ORDER_BY) ?: return@withContext null
-    return@withContext processCursor(cursor, beforeAndroidTen())
+    val cursor =
+      context.contentResolver.query(QueryScripts.QUERY_URI, QueryScripts.projectionAlbum(), selection, selectionArgs, QueryScripts.ORDER_BY)
+        ?: return@withContext null
+    return@withContext processCursor(cursor, QueryScripts.beforeAndroidTen())
   }
 
   private fun buildSelection(selectionSpec: SelectionSpec): Pair<String, Array<String>> {
     return when {
-      selectionSpec.onlyShowGif() -> Pair(
-        if (beforeAndroidTen()) AlbumCollection.SELECTION_FOR_SINGLE_MEDIA_GIF_TYPE else AlbumCollection.SELECTION_FOR_SINGLE_MEDIA_GIF_TYPE_29,
-        AlbumCollection.getSelectionArgsForSingleMediaGifType(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE)
-      )
+      selectionSpec.onlyShowGif() -> Pair(QueryScripts.selectionForSingleMediaGifType(), QueryScripts.selectionArgsForSingleMediaGifType())
 
       selectionSpec.onlyShowImages() -> Pair(
-        if (beforeAndroidTen()) AlbumCollection.SELECTION_FOR_SINGLE_MEDIA_TYPE else AlbumCollection.SELECTION_FOR_SINGLE_MEDIA_TYPE_29,
-        AlbumCollection.getSelectionArgsForSingleMediaType(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE)
+        QueryScripts.selectionForSingleMediaType(), QueryScripts.selectionArgsForSingleMediaType(FileColumns.MEDIA_TYPE_IMAGE)
       )
 
       selectionSpec.onlyShowVideos() -> Pair(
-        if (beforeAndroidTen()) AlbumCollection.SELECTION_FOR_SINGLE_MEDIA_TYPE else AlbumCollection.SELECTION_FOR_SINGLE_MEDIA_TYPE_29,
-        AlbumCollection.getSelectionArgsForSingleMediaType(MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO)
+        QueryScripts.selectionForSingleMediaType(), QueryScripts.selectionArgsForSingleMediaType(FileColumns.MEDIA_TYPE_VIDEO)
       )
 
-      else -> Pair(
-        if (beforeAndroidTen()) AlbumCollection.SELECTION else AlbumCollection.SELECTION_29, AlbumCollection.SELECTION_ARGS
-      )
+      else -> Pair(QueryScripts.selectionAllForAllAlbum(), QueryScripts.argsForImageAndVideo())
     }
   }
 
@@ -65,18 +53,18 @@ class AlbumRepository(private val context: Context) {
     return if (isBeforeQ) processPreQ(cursor) else processPostQ(cursor)
   }
 
-  private fun processPreQ(albums: Cursor): Cursor { // ... 原 loadInBackground 中针对 Android Q 之前的处理逻辑 ...
-    val allAlbum = MatrixCursor(COLUMNS)
+  private fun processPreQ(albums: Cursor): Cursor {
+    val allAlbum = MatrixCursor(QueryScripts.COLUMNS)
     var totalCount = 0
     var allAlbumCoverUri: Uri? = null
-    val otherAlbums = MatrixCursor(COLUMNS)
+    val otherAlbums = MatrixCursor(QueryScripts.COLUMNS)
     while (albums.moveToNext()) {
       val fileId: Long = albums.getLong(albums.getColumnIndexOrThrow(FileColumns._ID))
-      val bucketId: Long = albums.getLong(albums.getColumnIndexOrThrow(COLUMN_BUCKET_ID))
-      val bucketDisplayName: String = albums.getString(albums.getColumnIndexOrThrow(COLUMN_BUCKET_DISPLAY_NAME))
+      val bucketId: Long = albums.getLong(albums.getColumnIndexOrThrow(QueryScripts.COLUMN_BUCKET_ID))
+      val bucketDisplayName: String = albums.getString(albums.getColumnIndexOrThrow(QueryScripts.COLUMN_BUCKET_DISPLAY_NAME))
       val mimeType: String = albums.getString(albums.getColumnIndexOrThrow(MediaColumns.MIME_TYPE))
-      val uri: Uri = AlbumCollection.getUri(albums)
-      val count: Int = albums.getInt(albums.getColumnIndexOrThrow(AlbumCollection.COLUMN_COUNT))
+      val uri: Uri = QueryScripts.getUri(albums)
+      val count: Int = albums.getInt(albums.getColumnIndexOrThrow(QueryScripts.COLUMN_COUNT))
 
       otherAlbums.addRow(
         arrayOf(
@@ -86,20 +74,14 @@ class AlbumRepository(private val context: Context) {
       totalCount += count
     }
     if (albums.moveToFirst()) {
-      allAlbumCoverUri = AlbumCollection.getUri(albums)
+      allAlbumCoverUri = QueryScripts.getUri(albums)
     }
-
-    allAlbum.addRow(
-      arrayOf<String?>(
-        Album.ALBUM_ID_ALL, Album.ALBUM_ID_ALL, Album.ALBUM_NAME_ALL, null, allAlbumCoverUri?.toString(), totalCount.toString()
-      )
-    )
-
-    return MergeCursor(arrayOf<Cursor>(allAlbum, otherAlbums));
+    allAlbum.addRow(arrayOf(Album.ALBUM_ID_ALL, Album.ALBUM_ID_ALL, Album.ALBUM_NAME_ALL, null, allAlbumCoverUri?.toString(), totalCount.toString()))
+    return MergeCursor(arrayOf<Cursor>(allAlbum, otherAlbums))
   }
 
   private fun processPostQ(albums: Cursor): Cursor { // ... 原 loadInBackground 中针对 Android Q 及之后的分组逻辑 ...
-    val allAlbum = MatrixCursor(COLUMNS)
+    val allAlbum = MatrixCursor(QueryScripts.COLUMNS)
 
     var totalCount = 0
     var allAlbumCoverUri: Uri? = null
@@ -107,7 +89,7 @@ class AlbumRepository(private val context: Context) {
     // Pseudo GROUP BY
     val countMap: MutableMap<Long, Long> = HashMap()
     while (albums.moveToNext()) {
-      val bucketId: Long = albums.getLong(albums.getColumnIndexOrThrow(COLUMN_BUCKET_ID))
+      val bucketId: Long = albums.getLong(albums.getColumnIndexOrThrow(QueryScripts.COLUMN_BUCKET_ID))
 
       var count = countMap[bucketId]
       if (count == null) {
@@ -118,23 +100,23 @@ class AlbumRepository(private val context: Context) {
       countMap[bucketId] = count
     }
 
-    val otherAlbums = MatrixCursor(COLUMNS)
+    val otherAlbums = MatrixCursor(QueryScripts.COLUMNS)
     if (albums.moveToFirst()) {
-      allAlbumCoverUri = AlbumCollection.getUri(albums)
+      allAlbumCoverUri = QueryScripts.getUri(albums)
 
       val done: MutableSet<Long> = HashSet()
 
       do {
-        val bucketId: Long = albums.getLong(albums.getColumnIndexOrThrow(COLUMN_BUCKET_ID))
+        val bucketId: Long = albums.getLong(albums.getColumnIndexOrThrow(QueryScripts.COLUMN_BUCKET_ID))
 
         if (done.contains(bucketId)) {
           continue
         }
 
-        val fileId: Long = albums.getLong(albums.getColumnIndexOrThrow(FileColumns._ID)) ?: 0L
-        val bucketDisplayName: String = albums.getString(albums.getColumnIndexOrThrow(COLUMN_BUCKET_DISPLAY_NAME)) ?: ""
+        val fileId: Long = albums.getLong(albums.getColumnIndexOrThrow(FileColumns._ID))
+        val bucketDisplayName: String = albums.getString(albums.getColumnIndexOrThrow(QueryScripts.COLUMN_BUCKET_DISPLAY_NAME)) ?: ""
         val mimeType: String = albums.getString(albums.getColumnIndexOrThrow(MediaColumns.MIME_TYPE))
-        val uri: Uri = AlbumCollection.getUri(albums)
+        val uri: Uri = QueryScripts.getUri(albums)
         val count = countMap[bucketId]!!
 
         otherAlbums.addRow(arrayOf(fileId.toString(), bucketId.toString(), bucketDisplayName, mimeType, uri.toString(), count.toString()))
@@ -144,11 +126,7 @@ class AlbumRepository(private val context: Context) {
       } while (albums.moveToNext())
     }
 
-    allAlbum.addRow(
-      arrayOf<String?>(
-        Album.ALBUM_ID_ALL, Album.ALBUM_ID_ALL, Album.ALBUM_NAME_ALL, null, allAlbumCoverUri?.toString(), totalCount.toString()
-      )
-    )
+    allAlbum.addRow(arrayOf(Album.ALBUM_ID_ALL, Album.ALBUM_ID_ALL, Album.ALBUM_NAME_ALL, null, allAlbumCoverUri?.toString(), totalCount.toString()))
 
     return MergeCursor(arrayOf<Cursor>(allAlbum, otherAlbums))
   }

@@ -1,18 +1,37 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-  alias(libs.plugins.convention.android.application)
+  id 'com.android.application'
+  id 'org.jetbrains.kotlin.android'
+  id 'org.jetbrains.kotlin.kapt'
 }
 
 android {
   namespace "com.zhihu.matisse.sample"
 
+  compileSdk = 35
+
   defaultConfig {
     applicationId 'com.zhihu.matisse.sample'
-    versionCode libs.versions.appVersionCode.get().toInteger()
-    versionName libs.versions.appVersionName.get()
+    targetSdk = 35
+    minSdk = 26
+    versionCode 1
+    versionName "1.0.0"
   }
 
   buildFeatures {
     dataBinding true
+  }
+
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
+
+  kotlin {
+    compilerOptions {
+      jvmTarget = JvmTarget.JVM_17
+    }
   }
 }
 
@@ -20,10 +39,8 @@ dependencies {
   implementation project(':matisse')
   implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-  implementation(libs.androidx.appcompat)
-  implementation "androidx.recyclerview:recyclerview:1.0.0"
-  implementation 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.5@aar'
-  implementation 'io.reactivex.rxjava2:rxjava:2.2.12'
+  implementation("androidx.appcompat:appcompat:1.7.0")
+  implementation "androidx.recyclerview:recyclerview:1.4.0"
   implementation 'com.github.bumptech.glide:glide:4.16.0'
   implementation 'com.squareup.picasso:picasso:2.8'
 }

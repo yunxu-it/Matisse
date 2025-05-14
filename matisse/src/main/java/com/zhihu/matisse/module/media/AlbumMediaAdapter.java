@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.zhihu.matisse.R;
@@ -63,7 +64,7 @@ public class AlbumMediaAdapter extends RecyclerViewCursorAdapter<RecyclerView.Vi
     mRecyclerView = recyclerView;
   }
 
-  @Override public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+  @NonNull @Override public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
     if (viewType == VIEW_TYPE_CAPTURE_PHOTO) {
       View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.photo_capture_item, parent, false);
       CaptureViewHolder holder = new CaptureViewHolder(v);

@@ -56,14 +56,14 @@ class Album(var id: String, var coverUri: Uri, private var displayName: String, 
      */
     @JvmStatic
     fun valueOf(cursor: Cursor): Album {
-      val albumUri = cursor.getString(cursor.getColumnIndexOrThrow(AlbumCollection.COLUMN_URI))
+      val albumUri = cursor.getString(cursor.getColumnIndexOrThrow(QueryScripts.COLUMN_URI))
       val indexAlbumName = cursor.getColumnIndexOrThrow("bucket_display_name")
       Log.i("Album", "valueOf-63: " + indexAlbumName + " " + cursor.getString(indexAlbumName))
       return Album(
         cursor.getString(cursor.getColumnIndexOrThrow("bucket_id")),
         (albumUri ?: "").toUri(),
         cursor.getString(indexAlbumName) ?: "unknown",
-        cursor.getLong(cursor.getColumnIndexOrThrow(AlbumCollection.COLUMN_COUNT))
+        cursor.getLong(cursor.getColumnIndexOrThrow(QueryScripts.COLUMN_COUNT))
       )
     }
   }
