@@ -35,19 +35,16 @@ import java.util.EnumSet
 enum class MimeType(private val mMimeTypeName: String, private val mExtensions: Set<String>) {
   // ============== images ==============
   JPEG("image/jpeg", arraySetOf("jpg", "jpeg")), PNG("image/png", arraySetOf("png")), GIF("image/gif", arraySetOf("gif")), BMP(
-    "image/x-ms-bmp",
-    arraySetOf("bmp")
+    "image/x-ms-bmp", arraySetOf("bmp")
   ),
   WEBP("image/webp", arraySetOf("webp")),
 
   // ============== videos ==============
   MPEG("video/mpeg", arraySetOf("mpeg", "mpg")), MP4("video/mp4", arraySetOf("mp4", "m4v")), QUICKTIME(
-    "video/quicktime",
-    arraySetOf("mov")
+    "video/quicktime", arraySetOf("mov")
   ),
   THREEGPP("video/3gpp", arraySetOf("3gp", "3gpp")), THREEGPP2("video/3gpp2", arraySetOf("3g2", "3gpp2")), MKV(
-    "video/x-matroska",
-    arraySetOf("mkv")
+    "video/x-matroska", arraySetOf("mkv")
   ),
   WEBM("video/webm", arraySetOf("webm")), TS("video/mp2ts", arraySetOf("ts")), AVI("video/avi", arraySetOf("avi"));
 
@@ -82,36 +79,45 @@ enum class MimeType(private val mMimeTypeName: String, private val mExtensions: 
   }
 
   companion object {
+
+    @JvmStatic
     fun ofAll(): Set<MimeType> {
       return EnumSet.allOf(MimeType::class.java)
     }
 
+    @JvmStatic
     fun of(type: MimeType, vararg rest: MimeType?): Set<MimeType> {
       return EnumSet.of(type, *rest)
     }
 
+    @JvmStatic
     fun ofImage(): Set<MimeType> {
       return EnumSet.of(JPEG, PNG, GIF, BMP, WEBP)
     }
 
+    @JvmStatic
     fun ofGif(): Set<MimeType> {
       return EnumSet.of(GIF)
     }
 
+    @JvmStatic
     fun ofVideo(): Set<MimeType> {
       return EnumSet.of(MPEG, MP4, QUICKTIME, THREEGPP, THREEGPP2, MKV, WEBM, TS, AVI)
     }
 
+    @JvmStatic
     fun isImage(mimeType: String?): Boolean {
       if (mimeType == null) return false
       return mimeType.startsWith("image")
     }
 
+    @JvmStatic
     fun isVideo(mimeType: String?): Boolean {
       if (mimeType == null) return false
       return mimeType.startsWith("video")
     }
 
+    @JvmStatic
     fun isGif(mimeType: String?): Boolean {
       if (mimeType == null) return false
       return mimeType == GIF.toString()
