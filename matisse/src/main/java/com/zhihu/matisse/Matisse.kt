@@ -85,6 +85,7 @@ class Matisse private constructor(activity: Activity, fragment: Fragment? = null
      * @param activity Activity instance.
      * @return Matisse instance.
      */
+    @JvmStatic
     fun from(activity: Activity): Matisse {
       return Matisse(activity)
     }
@@ -99,6 +100,7 @@ class Matisse private constructor(activity: Activity, fragment: Fragment? = null
      * @param fragment Fragment instance.
      * @return Matisse instance.
      */
+    @JvmStatic
     fun from(fragment: Fragment): Matisse {
       return Matisse(fragment)
     }

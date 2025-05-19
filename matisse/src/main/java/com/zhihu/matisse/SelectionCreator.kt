@@ -16,6 +16,7 @@
  */
 package com.zhihu.matisse
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import androidx.activity.result.ActivityResultLauncher
@@ -299,6 +300,18 @@ class SelectionCreator internal constructor(private val matisse: Matisse, mimeTy
     val activity = matisse.activity ?: return
     val intent = Intent(activity, MatisseActivity::class.java)
     launcher.launch(intent)
+  }
+
+  @Deprecated("use forResult instead")
+  fun forResultCode(requestCode: Int) {
+    val activity = matisse.activity ?: return
+    val intent = Intent(activity, MatisseActivity::class.java)
+    val fragment = matisse.fragment
+    if (fragment != null) {
+      fragment.startActivityForResult(intent, requestCode)
+    } else {
+      activity.startActivityForResult(intent, requestCode)
+    }
   }
 
   fun showPreview(showPreview: Boolean): SelectionCreator {
