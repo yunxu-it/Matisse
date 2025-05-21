@@ -302,8 +302,8 @@ class SelectionCreator internal constructor(private val matisse: Matisse, mimeTy
     launcher.launch(intent)
   }
 
-  @Deprecated("use forResult instead")
-  fun forResultCode(requestCode: Int) {
+  @Deprecated("use forResult(ActivityResultLauncher) instead")
+  fun forResult(requestCode: Int) {
     val activity = matisse.activity ?: return
     val intent = Intent(activity, MatisseActivity::class.java)
     val fragment = matisse.fragment
