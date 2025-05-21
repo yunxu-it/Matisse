@@ -109,7 +109,7 @@ public class SampleJavaActivity extends AppCompatActivity {
               Log.e("isChecked", "onCheck: isChecked=" + isChecked);
             }
           })
-          .forResultCode(100);
+          .forResult(100);
         break;
       case 1:
         Matisse.from(this)
