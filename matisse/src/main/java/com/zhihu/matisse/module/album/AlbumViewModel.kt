@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 
 class AlbumViewModel(private val repository: AlbumRepository) : AbsViewModel() {
   private val _albums = MutableLiveData<Cursor>()
-  val albums: LiveData<Cursor> get() = _albums
+  val albums: LiveData<Cursor?> get() = _albums
 
   fun loadAlbums() {
     viewModelScope.launch {

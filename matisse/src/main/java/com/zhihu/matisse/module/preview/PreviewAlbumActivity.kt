@@ -47,7 +47,8 @@ class PreviewAlbumActivity : BasePreviewActivity() {
     val album = intent.getParcelableExtra<Album>(EXTRA_ALBUM)
     if (album != null) {
       mediaViewModel.loadAlbums(album)
-      mediaViewModel.mediaList.observe(this) { cursor: Cursor ->
+      mediaViewModel.mediaList.observe(this) { cursor: Cursor? ->
+        if (cursor == null) return@observe
         onAlbumMediaLoad(cursor)
       }
     }

@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 
 class MediaViewModel(private val repository: MediaRepository) : AbsViewModel() {
   private val _mediaList = MutableLiveData<Cursor>()
-  val mediaList: LiveData<Cursor> get() = _mediaList
+  val mediaList: LiveData<Cursor?> get() = _mediaList
 
   /**
    * @param needCaptureItem 预览列表不需要显示拍照和录像按钮
