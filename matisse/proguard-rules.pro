@@ -17,3 +17,5 @@
 #}
 
 -dontwarn com.squareup.okhttp.**
+-keep class androidx.collection.** { *; }
+-keep interface androidx.collection.** { *; }

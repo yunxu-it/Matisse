@@ -112,6 +112,7 @@ class Matisse private constructor(activity: Activity, fragment: Fragment? = null
      * [Fragment.onActivityResult].
      * @return User selected media' [Uri] list.
      */
+    @JvmStatic
     fun obtainResult(data: Intent?): List<Uri>? {
       return data?.getParcelableArrayListExtra(MatisseActivity.EXTRA_RESULT_SELECTION)
     }
@@ -123,6 +124,7 @@ class Matisse private constructor(activity: Activity, fragment: Fragment? = null
      * [Fragment.onActivityResult].
      * @return User selected media path list.
      */
+    @JvmStatic
     fun obtainPathResult(data: Intent?): List<String>? {
       return data?.getStringArrayListExtra(MatisseActivity.EXTRA_RESULT_SELECTION_PATH)
     }
@@ -134,6 +136,7 @@ class Matisse private constructor(activity: Activity, fragment: Fragment? = null
      * [Fragment.onActivityResult].
      * @return Whether use original photo
      */
+    @JvmStatic
     fun obtainOriginalState(data: Intent?): Boolean {
       return data?.getBooleanExtra(MatisseActivity.EXTRA_RESULT_ORIGINAL_ENABLE, false) ?: false
     }

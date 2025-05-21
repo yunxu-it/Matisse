@@ -35,6 +35,7 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.zhihu.matisse.Matisse
 import com.zhihu.matisse.MimeType
 import com.zhihu.matisse.MimeType.GIF
+import com.zhihu.matisse.MimeType.JPEG
 import com.zhihu.matisse.engine.impl.GlideEngine
 import com.zhihu.matisse.engine.impl.PicassoEngine
 import com.zhihu.matisse.filter.Filter
@@ -90,6 +91,7 @@ class SampleActivity : AppCompatActivity() {
           .choose(MimeType.ofImage(), false)
           .countable(true)
           .capture(true)
+          .theme(R.style.AppTheme)
           .captureStrategy(CaptureStrategy(true, "com.zhihu.matisse.sample.fileprovider", "test"))
           .maxSelectable(9)
           .addFilter(GifSizeFilter(320, 320, 5 * Filter.K * Filter.K))
@@ -113,12 +115,14 @@ class SampleActivity : AppCompatActivity() {
               Log.e("isChecked", "onCheck: isChecked=$isChecked")
             }
           })
-          .forResult(resultLauncher)
+          .forResult(100)
+        //.forResult(resultLauncher)
+
       }
 
       1 -> {
         Matisse.from(this@SampleActivity)
-          .choose(MimeType.ofImage())
+          .choose(MimeType.of(JPEG))
           .countable(false)
           .capture(true)
           .captureStrategy(CaptureStrategy(true, "com.zhihu.matisse.sample.fileprovider", "test"))
@@ -182,4 +186,8 @@ class SampleActivity : AppCompatActivity() {
     }
   }
 
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+    Log.i("SampleActivity", "onActivityReenter-190:  " + requestCode)
+  }
 }
