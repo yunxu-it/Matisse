@@ -152,7 +152,11 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
 
     binding.originalLayout.setOnClickListener(v -> originData());
 
-    albumViewModel.getAlbums().observe(this, albums -> onAlbumLoad(albums));
+    albumViewModel.getAlbums().observe(this, albums -> {
+      if (albums != null) {
+        onAlbumLoad(albums);
+      }
+    });
   }
 
   private void preview() {

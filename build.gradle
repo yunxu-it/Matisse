@@ -4,9 +4,6 @@ buildscript {
       setUrl("https://maven.aliyun.com/repository/public")
     }
     maven {
-      setUrl("https://maven.aliyun.com/repository/central")
-    }
-    maven {
       setUrl("https://maven.aliyun.com/repository/gradle-plugin")
     }
     gradlePluginPortal()
@@ -15,8 +12,8 @@ buildscript {
     maven { setUrl("https://jitpack.io") }
   }
   dependencies {
-    classpath("com.android.tools.build:gradle:8.7.2")
-    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
+    classpath('com.android.tools.build:gradle:8.10.0')
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.21")
   }
 }
 
@@ -24,9 +21,6 @@ allprojects {
   repositories {
     maven {
       setUrl("https://maven.aliyun.com/repository/public")
-    }
-    maven {
-      setUrl("https://maven.aliyun.com/repository/central")
     }
     google()
     mavenCentral()
