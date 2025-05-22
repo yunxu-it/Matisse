@@ -115,8 +115,8 @@ class SampleActivity : AppCompatActivity() {
               Log.e("isChecked", "onCheck: isChecked=$isChecked")
             }
           })
-          .forResult(100)
-        //.forResult(resultLauncher)
+          //.forResult(100)
+        .forResult(resultLauncher)
 
       }
 

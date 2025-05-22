@@ -20,7 +20,6 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.text.TextUtils
 import android.webkit.MimeTypeMap
-import androidx.collection.arraySetOf
 import com.zhihu.matisse.internal.utils.PhotoMetadataUtils
 import java.util.EnumSet
 
@@ -34,19 +33,19 @@ import java.util.EnumSet
  */
 enum class MimeType(private val mMimeTypeName: String, private val mExtensions: Set<String>) {
   // ============== images ==============
-  JPEG("image/jpeg", arraySetOf("jpg", "jpeg")), PNG("image/png", arraySetOf("png")), GIF("image/gif", arraySetOf("gif")), BMP(
-    "image/x-ms-bmp", arraySetOf("bmp")
+  JPEG("image/jpeg", setOf("jpg", "jpeg")), PNG("image/png", setOf("png")), GIF("image/gif", setOf("gif")), BMP(
+    "image/x-ms-bmp", setOf("bmp")
   ),
-  WEBP("image/webp", arraySetOf("webp")),
+  WEBP("image/webp", setOf("webp")),
 
   // ============== videos ==============
-  MPEG("video/mpeg", arraySetOf("mpeg", "mpg")), MP4("video/mp4", arraySetOf("mp4", "m4v")), QUICKTIME(
-    "video/quicktime", arraySetOf("mov")
+  MPEG("video/mpeg", setOf("mpeg", "mpg")), MP4("video/mp4", setOf("mp4", "m4v")), QUICKTIME(
+    "video/quicktime", setOf("mov")
   ),
-  THREEGPP("video/3gpp", arraySetOf("3gp", "3gpp")), THREEGPP2("video/3gpp2", arraySetOf("3g2", "3gpp2")), MKV(
-    "video/x-matroska", arraySetOf("mkv")
+  THREEGPP("video/3gpp", setOf("3gp", "3gpp")), THREEGPP2("video/3gpp2", setOf("3g2", "3gpp2")), MKV(
+    "video/x-matroska", setOf("mkv")
   ),
-  WEBM("video/webm", arraySetOf("webm")), TS("video/mp2ts", arraySetOf("ts")), AVI("video/avi", arraySetOf("avi"));
+  WEBM("video/webm", setOf("webm")), TS("video/mp2ts", setOf("ts")), AVI("video/avi", setOf("avi"));
 
   override fun toString(): String {
     return mMimeTypeName
