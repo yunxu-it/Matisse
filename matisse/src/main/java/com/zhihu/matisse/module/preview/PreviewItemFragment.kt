@@ -19,23 +19,24 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import com.zhihu.matisse.R
-import com.zhihu.matisse.base.BaseDBFragment
+import com.zhihu.matisse.base.BaseVBFragment
 import com.zhihu.matisse.databinding.FragmentPreviewItemBinding
 import com.zhihu.matisse.internal.entity.Item
 import com.zhihu.matisse.internal.entity.SelectionSpec.Companion.getInstance
 import com.zhihu.matisse.internal.utils.PhotoMetadataUtils
 import com.zhihu.matisse.listener.OnFragmentInteractionListener
-import it.sephiroth.android.library.imagezoom.ImageViewTouch
 import it.sephiroth.android.library.imagezoom.ImageViewTouchBase.DisplayType.FIT_TO_SCREEN
 
-class PreviewItemFragment : BaseDBFragment<FragmentPreviewItemBinding>() {
+class PreviewItemFragment : BaseVBFragment<FragmentPreviewItemBinding>() {
   private var mListener: OnFragmentInteractionListener? = null
 
-  override fun initLayoutId(): Int {
-    return R.layout.fragment_preview_item
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentPreviewItemBinding {
+    return FragmentPreviewItemBinding.inflate(inflater, container, false)
   }
 
   override fun initView() {

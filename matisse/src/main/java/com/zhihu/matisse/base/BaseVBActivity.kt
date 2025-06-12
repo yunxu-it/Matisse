@@ -16,7 +16,25 @@
  */
 package com.zhihu.matisse.base
 
-import androidx.databinding.ViewDataBinding
-import androidx.recyclerview.widget.RecyclerView
+import android.view.LayoutInflater
+import androidx.viewbinding.ViewBinding
 
-class BaseDBViewHolder(val dataBinding: ViewDataBinding) : RecyclerView.ViewHolder(dataBinding.root)
+abstract class BaseVBActivity<VB : ViewBinding> : BaseActivity() {
+
+  private var _binding: VB? = null
+
+  protected val binding get() = _binding!!
+
+  protected abstract fun inflateBinding(layoutInflater: LayoutInflater): VB
+
+  override fun initContentView() {
+    _binding = inflateBinding(layoutInflater)
+    setContentView(binding.root)
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    _binding = null
+  }
+
+}

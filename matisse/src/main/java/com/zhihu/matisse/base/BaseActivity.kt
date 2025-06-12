@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2025 lixiaolong
  *
@@ -38,7 +37,9 @@ abstract class BaseActivity : AppCompatActivity() {
     setContentView(setLayoutResourceID())
   }
 
-  protected abstract fun setLayoutResourceID(): Int
+  protected fun setLayoutResourceID(): Int {
+    return 0
+  }
 
   protected abstract fun initView()
 

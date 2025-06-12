@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import androidx.annotation.NonNull;
@@ -32,32 +33,32 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.zhihu.matisse.R;
-import com.zhihu.matisse.base.BaseDBActivity;
+import com.zhihu.matisse.base.BaseVBActivity;
 import com.zhihu.matisse.databinding.ActivityMatisseBinding;
 import com.zhihu.matisse.internal.entity.Album;
 import com.zhihu.matisse.internal.entity.Item;
 import com.zhihu.matisse.internal.entity.SelectionSpec;
 import com.zhihu.matisse.internal.model.SelectedItemCollection;
-import com.zhihu.matisse.module.preview.PreviewAlbumActivity;
-import com.zhihu.matisse.module.preview.BasePreviewActivity;
-import com.zhihu.matisse.module.media.AlbumMediaFragment;
-import com.zhihu.matisse.module.preview.PreviewSelectedActivity;
-import com.zhihu.matisse.module.media.AlbumMediaAdapter;
 import com.zhihu.matisse.internal.ui.widget.AlbumsSpinner;
 import com.zhihu.matisse.internal.ui.widget.IncapableDialog;
 import com.zhihu.matisse.internal.utils.MediaStoreCompat;
 import com.zhihu.matisse.internal.utils.PathUtils;
 import com.zhihu.matisse.internal.utils.PhotoMetadataUtils;
 import com.zhihu.matisse.internal.utils.SingleMediaScanner;
+import com.zhihu.matisse.module.media.AlbumMediaAdapter;
+import com.zhihu.matisse.module.media.AlbumMediaFragment;
+import com.zhihu.matisse.module.preview.BasePreviewActivity;
+import com.zhihu.matisse.module.preview.PreviewAlbumActivity;
+import com.zhihu.matisse.module.preview.PreviewSelectedActivity;
 import java.util.ArrayList;
 
 /**
  * Main Activity to display albums and media content (images/videos) in each album
  * and also support media selecting operations.
  */
-public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
-  implements AdapterView.OnItemSelectedListener, AlbumMediaFragment.SelectionProvider, AlbumMediaAdapter.CheckStateListener,
-  AlbumMediaAdapter.OnMediaClickListener, AlbumMediaAdapter.OnPhotoCapture {
+public class MatisseActivity extends BaseVBActivity<ActivityMatisseBinding>
+    implements AdapterView.OnItemSelectedListener, AlbumMediaFragment.SelectionProvider, AlbumMediaAdapter.CheckStateListener,
+    AlbumMediaAdapter.OnMediaClickListener, AlbumMediaAdapter.OnPhotoCapture {
 
   private AlbumViewModel albumViewModel;
 
@@ -128,13 +129,13 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
 
   @Override protected void initView() {
     try {
-      binding.toolbar.setNavigationIcon(R.drawable.baseline_arrow_back_24);
+      getBinding().toolbar.setNavigationIcon(R.drawable.baseline_arrow_back_24);
       int color;
       try (TypedArray ta = getTheme().obtainStyledAttributes(new int[] { R.attr.album_element_color })) {
         color = ta.getColor(0, 0);
       }
-      binding.toolbar.getNavigationIcon().setColorFilter(color, PorterDuff.Mode.SRC_IN);
-      binding.toolbar.setNavigationOnClickListener(v -> onBackPressed());
+      getBinding().toolbar.getNavigationIcon().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+      getBinding().toolbar.setNavigationOnClickListener(v -> onBackPressed());
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -143,14 +144,14 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
 
     mAlbumsSpinner = new AlbumsSpinner(this);
     mAlbumsSpinner.setOnItemSelectedListener(this);
-    mAlbumsSpinner.setSelectedTextView(binding.selectedAlbum);
-    mAlbumsSpinner.setPopupAnchorView(binding.toolbar);
+    mAlbumsSpinner.setSelectedTextView(getBinding().selectedAlbum);
+    mAlbumsSpinner.setPopupAnchorView(getBinding().toolbar);
     mAlbumsSpinner.setAdapter(mAlbumsAdapter);
 
-    binding.buttonPreview.setOnClickListener(v -> preview());
-    binding.buttonApply.setOnClickListener(v -> apply());
+    getBinding().buttonPreview.setOnClickListener(v -> preview());
+    getBinding().buttonApply.setOnClickListener(v -> apply());
 
-    binding.originalLayout.setOnClickListener(v -> originData());
+    getBinding().originalLayout.setOnClickListener(v -> originData());
 
     albumViewModel.getAlbums().observe(this, albums -> {
       if (albums != null) {
@@ -186,7 +187,7 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
     }
 
     mOriginalEnable = !mOriginalEnable;
-    binding.original.setChecked(mOriginalEnable);
+    getBinding().original.setChecked(mOriginalEnable);
 
     if (mSpec.onCheckedListener != null) {
       mSpec.onCheckedListener.onCheck(mOriginalEnable);
@@ -258,36 +259,36 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
   private void updateBottomToolbar() {
     int selectedCount = mSelectedCollection.count();
     if (selectedCount == 0) {
-      binding.buttonPreview.setEnabled(false);
-      binding.buttonApply.setEnabled(false);
-      binding.buttonApply.setText(getString(R.string.button_apply_default));
+      getBinding().buttonPreview.setEnabled(false);
+      getBinding().buttonApply.setEnabled(false);
+      getBinding().buttonApply.setText(getString(R.string.button_apply_default));
     } else if (selectedCount == 1 && mSpec.singleSelectionModeEnabled()) {
-      binding.buttonPreview.setEnabled(true);
-      binding.buttonApply.setText(R.string.button_apply_default);
-      binding.buttonApply.setEnabled(true);
+      getBinding().buttonPreview.setEnabled(true);
+      getBinding().buttonApply.setText(R.string.button_apply_default);
+      getBinding().buttonApply.setEnabled(true);
     } else {
-      binding.buttonPreview.setEnabled(true);
-      binding.buttonApply.setEnabled(true);
-      binding.buttonApply.setText(getString(R.string.button_apply, selectedCount));
+      getBinding().buttonPreview.setEnabled(true);
+      getBinding().buttonApply.setEnabled(true);
+      getBinding().buttonApply.setText(getString(R.string.button_apply, selectedCount));
     }
 
     if (mSpec.originalable) {
-      binding.originalLayout.setVisibility(View.VISIBLE);
+      getBinding().originalLayout.setVisibility(View.VISIBLE);
       updateOriginalState();
     } else {
-      binding.originalLayout.setVisibility(View.INVISIBLE);
+      getBinding().originalLayout.setVisibility(View.INVISIBLE);
     }
   }
 
   private void updateOriginalState() {
-    binding.original.setChecked(mOriginalEnable);
+    getBinding().original.setChecked(mOriginalEnable);
     if (countOverMaxSize() > 0) {
 
       if (mOriginalEnable) {
         IncapableDialog incapableDialog = IncapableDialog.newInstance("", getString(R.string.error_over_original_size, mSpec.originalMaxSize));
         incapableDialog.show(getSupportFragmentManager(), IncapableDialog.class.getName());
 
-        binding.original.setChecked(false);
+        getBinding().original.setChecked(false);
         mOriginalEnable = false;
       }
     }
@@ -355,11 +356,11 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
   private void onAlbumSelected(Album album) {
     Log.i("MatisseActivity", "onAlbumSelected-357: " + album.getDisplayName() + " " + album.getCount() + " " + album.isEmpty());
     if (album.isAll() && album.isEmpty()) {
-      binding.container.setVisibility(View.GONE);
-      binding.emptyView.setVisibility(View.VISIBLE);
+      getBinding().container.setVisibility(View.GONE);
+      getBinding().emptyView.setVisibility(View.VISIBLE);
     } else {
-      binding.container.setVisibility(View.VISIBLE);
-      binding.emptyView.setVisibility(View.GONE);
+      getBinding().container.setVisibility(View.VISIBLE);
+      getBinding().emptyView.setVisibility(View.GONE);
       Fragment fragment = AlbumMediaFragment.newInstance(album);
       getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, AlbumMediaFragment.class.getSimpleName()).commitAllowingStateLoss();
     }
@@ -399,7 +400,7 @@ public class MatisseActivity extends BaseDBActivity<ActivityMatisseBinding>
     }
   }
 
-  @Override protected int setLayoutResourceID() {
-    return R.layout.activity_matisse;
+  @NonNull @Override protected ActivityMatisseBinding inflateBinding(@NonNull LayoutInflater layoutInflater) {
+    return ActivityMatisseBinding.inflate(layoutInflater);
   }
 }

@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2025 lixiaolong
  *
@@ -20,21 +19,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.databinding.DataBindingUtil
-import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
+import androidx.viewbinding.ViewBinding
 
-abstract class BaseDBFragment<DB : ViewDataBinding> : Fragment() {
+abstract class BaseVBFragment<VB : ViewBinding> : Fragment() {
+  private var _binding: VB? = null
+  protected val binding get() = _binding!!
 
-  protected lateinit var binding: DB
+  protected abstract fun inflateBinding(
+    inflater: LayoutInflater,
+    container: ViewGroup?
+  ): VB
+
   private var viewModels: HashMap<String, AbsViewModel> = hashMapOf()
-
-  abstract fun initLayoutId(): Int
 
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
   ): View {
-    binding = DataBindingUtil.inflate(inflater, initLayoutId(), container, false)
+    _binding = inflateBinding(inflater, container)
     return binding.root
   }
 
@@ -50,6 +52,7 @@ abstract class BaseDBFragment<DB : ViewDataBinding> : Fragment() {
 
   override fun onDestroyView() {
     super.onDestroyView()
+    _binding = null
   }
 
 }

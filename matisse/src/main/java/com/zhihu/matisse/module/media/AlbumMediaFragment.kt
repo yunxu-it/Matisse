@@ -18,10 +18,12 @@ package com.zhihu.matisse.module.media
 import android.content.Context
 import android.database.Cursor
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import com.zhihu.matisse.R
-import com.zhihu.matisse.base.BaseDBFragment
+import com.zhihu.matisse.base.BaseVBFragment
 import com.zhihu.matisse.databinding.FragmentMediaSelectionBinding
 import com.zhihu.matisse.internal.entity.Album
 import com.zhihu.matisse.internal.entity.Item
@@ -33,7 +35,7 @@ import com.zhihu.matisse.module.media.AlbumMediaAdapter.CheckStateListener
 import com.zhihu.matisse.module.media.AlbumMediaAdapter.OnMediaClickListener
 import com.zhihu.matisse.module.media.MediaRepository.Companion.newInstance
 
-class AlbumMediaFragment : BaseDBFragment<FragmentMediaSelectionBinding>(), CheckStateListener, OnMediaClickListener {
+class AlbumMediaFragment : BaseVBFragment<FragmentMediaSelectionBinding>(), CheckStateListener, OnMediaClickListener {
   private val mediaViewModel: MediaViewModel by lazy {
     ViewModelProvider(
       this, MediaViewModelFactory(newInstance(requireContext()))
@@ -61,8 +63,8 @@ class AlbumMediaFragment : BaseDBFragment<FragmentMediaSelectionBinding>(), Chec
     }
   }
 
-  override fun initLayoutId(): Int {
-    return R.layout.fragment_media_selection
+  override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentMediaSelectionBinding {
+    return FragmentMediaSelectionBinding.inflate(inflater, container, false)
   }
 
   override fun initView() {
