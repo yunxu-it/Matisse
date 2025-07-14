@@ -9,11 +9,11 @@ plugins {
 android {
   namespace "com.zhihu.matisse.sample"
 
-  compileSdk = 34
+  compileSdk = 35
 
   defaultConfig {
     applicationId 'com.zhihu.matisse.sample'
-    targetSdk = 34
+    targetSdk = 35
     minSdk = 24
     versionCode 1
     versionName "1.0.0"

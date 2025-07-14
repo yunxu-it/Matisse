@@ -6,15 +6,16 @@ plugins {
   id "org.jetbrains.kotlin.kapt"
   id 'kotlin-parcelize'
   id 'maven-publish'
+  id 'project-report'
 }
 
 android {
   namespace 'com.zhihu.matisse'
 
-  compileSdk = 34
+  compileSdk = 35
 
   defaultConfig {
-    targetSdk = 34
+    targetSdk = 35
     minSdk = 24
   }
 
@@ -59,7 +60,7 @@ publishing {
     release(MavenPublication) {
       groupId = 'com.github.yunxu-it'
       artifactId = 'matisse'
-      version = '1.1.4'
+      version = '1.1.5'
 
       afterEvaluate {
         from components.release

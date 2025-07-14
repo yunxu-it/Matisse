@@ -28,6 +28,10 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsCompat.Type
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
@@ -68,6 +72,12 @@ class SampleActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { v: View, insets: WindowInsetsCompat ->
+      val navigationBars = insets.getInsets(Type.systemBars())
+      v.setPadding(0,  navigationBars.top, 0, navigationBars.bottom)
+      insets
+    }
     setContentView(R.layout.activity_main)
     findViewById<View>(R.id.zhihu).setOnClickListener { v -> onClick(0) }
     findViewById<View>(R.id.dracula).setOnClickListener { v -> onClick(1) }

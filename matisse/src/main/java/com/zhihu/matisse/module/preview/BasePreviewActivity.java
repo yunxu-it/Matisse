@@ -20,6 +20,10 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.viewpager.widget.ViewPager;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.appcompat.app.AppCompatActivity;
@@ -78,6 +82,12 @@ public abstract class BasePreviewActivity extends AppCompatActivity
       finish();
       return;
     }
+    WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+    ViewCompat.setOnApplyWindowInsetsListener(getWindow().getDecorView(), (v, insets) -> {
+      Insets navigationBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+      v.setPadding(0, navigationBars.top, 0, navigationBars.bottom);
+      return insets;
+    });
     setContentView(R.layout.activity_media_preview);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 

@@ -16,13 +16,24 @@
 package com.zhihu.matisse.base
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsCompat.Type
 
 abstract class BaseActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     init(savedInstanceState)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { v: View, insets: WindowInsetsCompat ->
+      val navigationBars = insets.getInsets(Type.systemBars())
+      v.setPadding(0,  navigationBars.top, 0, navigationBars.bottom)
+      insets
+    }
     initContentView()
     initAfter(savedInstanceState)
     initView()
