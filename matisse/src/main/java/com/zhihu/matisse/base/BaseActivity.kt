@@ -24,6 +24,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type
 
 abstract class BaseActivity : AppCompatActivity() {
+  private var immersiveInitPaddingTop: Int = 0
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -31,13 +32,26 @@ abstract class BaseActivity : AppCompatActivity() {
     WindowCompat.setDecorFitsSystemWindows(window, false)
     ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { v: View, insets: WindowInsetsCompat ->
       val navigationBars = insets.getInsets(Type.systemBars())
-      v.setPadding(0,  navigationBars.top, 0, navigationBars.bottom)
+      v.setPadding(0, 0, 0, navigationBars.bottom)
       insets
     }
     initContentView()
     initAfter(savedInstanceState)
     initView()
     initData()
+
+    immersiveView()?.let {
+      immersiveInitPaddingTop = it.layoutParams.height
+      ViewCompat.setOnApplyWindowInsetsListener(it) { v: View, insets: WindowInsetsCompat ->
+        val insetsInsets = insets.getInsets(Type.statusBars())
+        v.setPadding(v.paddingLeft, immersiveInitPaddingTop + insetsInsets.top, v.paddingRight, v.paddingBottom)
+        insets
+      }
+    }
+  }
+
+  protected open fun immersiveView(): View? {
+    return null
   }
 
   protected open fun init(savedInstanceState: Bundle?) {}

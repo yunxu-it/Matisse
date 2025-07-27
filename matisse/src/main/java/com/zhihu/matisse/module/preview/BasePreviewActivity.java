@@ -85,7 +85,7 @@ public abstract class BasePreviewActivity extends AppCompatActivity
     WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     ViewCompat.setOnApplyWindowInsetsListener(getWindow().getDecorView(), (v, insets) -> {
       Insets navigationBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-      v.setPadding(0, navigationBars.top, 0, navigationBars.bottom);
+      v.setPadding(0, 0, 0, navigationBars.bottom);
       return insets;
     });
     setContentView(R.layout.activity_media_preview);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <style name="AppTheme" parent="Matisse.Zhihu">
+    <item name="colorPrimary">@color/zhihu_primary</item>
+    <item name="colorPrimaryDark">@color/zhihu_primary_dark</item>
+    <item name="toolbar">@style/Toolbar.Zhihu</item>
+    <item name="android:windowLightStatusBar">true</item>
+    <item name="android:windowLightNavigationBar">true</item>
+  </style>
+</resources>

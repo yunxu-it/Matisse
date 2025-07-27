@@ -27,7 +27,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -40,6 +39,7 @@ import com.zhihu.matisse.Matisse
 import com.zhihu.matisse.MimeType
 import com.zhihu.matisse.MimeType.GIF
 import com.zhihu.matisse.MimeType.JPEG
+import com.zhihu.matisse.base.BaseVBActivity
 import com.zhihu.matisse.engine.impl.GlideEngine
 import com.zhihu.matisse.engine.impl.PicassoEngine
 import com.zhihu.matisse.filter.Filter
@@ -47,8 +47,9 @@ import com.zhihu.matisse.internal.entity.CaptureStrategy
 import com.zhihu.matisse.listener.OnCheckedListener
 import com.zhihu.matisse.listener.OnSelectedListener
 import com.zhihu.matisse.sample.SampleActivity.UriAdapter.UriViewHolder
+import com.zhihu.matisse.sample.databinding.ActivityMainBinding
 
-class SampleActivity : AppCompatActivity() {
+class SampleActivity : BaseVBActivity<ActivityMainBinding>() {
   private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
     if (result.resultCode == Activity.RESULT_OK) {
       val data: Intent? = result.data
@@ -70,22 +71,22 @@ class SampleActivity : AppCompatActivity() {
 
   private var mAdapter: UriAdapter? = null
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    WindowCompat.setDecorFitsSystemWindows(window, false)
-    ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { v: View, insets: WindowInsetsCompat ->
-      val navigationBars = insets.getInsets(Type.systemBars())
-      v.setPadding(0,  navigationBars.top, 0, navigationBars.bottom)
-      insets
-    }
-    setContentView(R.layout.activity_main)
-    findViewById<View>(R.id.zhihu).setOnClickListener { v -> onClick(0) }
-    findViewById<View>(R.id.dracula).setOnClickListener { v -> onClick(1) }
-    findViewById<View>(R.id.only_gif).setOnClickListener { v -> onClick(2) }
+  override fun inflateBinding(layoutInflater: LayoutInflater): ActivityMainBinding {
+    return ActivityMainBinding.inflate(layoutInflater)
+  }
 
-    val recyclerView = findViewById<View>(R.id.recyclerview) as RecyclerView
+  override fun initView() {
+    binding.zhihu.setOnClickListener { v -> onClick(0) }
+    binding.dracula.setOnClickListener { v -> onClick(1) }
+    binding.onlyGif.setOnClickListener { v -> onClick(2) }
+
+    val recyclerView = binding.recyclerview
     recyclerView.layoutManager = LinearLayoutManager(this)
     recyclerView.adapter = UriAdapter().also { mAdapter = it }
+  }
+
+  override fun immersiveView(): View? {
+    return binding.container
   }
 
   fun onClick(type: Int) {
@@ -126,7 +127,7 @@ class SampleActivity : AppCompatActivity() {
             }
           })
           //.forResult(100)
-        .forResult(resultLauncher)
+          .forResult(resultLauncher)
 
       }
 
