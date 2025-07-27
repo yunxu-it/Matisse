@@ -127,6 +127,10 @@ public class MatisseActivity extends BaseVBActivity<ActivityMatisseBinding>
     outState.putBoolean("checkState", mOriginalEnable);
   }
 
+  @Nullable @Override protected View immersiveView() {
+    return getBinding().toolbar;
+  }
+
   @Override protected void initView() {
     try {
       getBinding().toolbar.setNavigationIcon(R.drawable.baseline_arrow_back_24);
